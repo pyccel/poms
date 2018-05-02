@@ -1,2 +1,2 @@
-# poms
-Parallel and Optimal  Multigrid for BSplines.
+# POMS
+Parallel and Optimal Multigrid for BSplines.
