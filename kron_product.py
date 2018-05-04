@@ -4,7 +4,8 @@ from mpi4py             import MPI
 from spl.ddm.cart       import Cart
 from spl.linalg.stencil import StencilVectorSpace, \
                                StencilVector, StencilMatrix
-# ...
+
+# ... TODO use the SPL version when available
 def update_ghost_regions(stencil_vector, direction):
 
     # ...
@@ -38,13 +39,24 @@ def update_ghost_regions(stencil_vector, direction):
 
     # ... Wait for end of data exchange (MPI_WAITALL)
     MPI.Request.Waitall(requests)
-
 # ...
 
+# .. Fill in stencil matrix as band
+def populate_1d_matrix(M):
+    e = M.ends[0]
+    s = M.starts[0]
+    p = M.pads[0]
+
+    for i in range(s, e+1):
+        for k in range(-p, p+1):
+            M[i, k] = k
+        M[i, 0] = 5.*p
+    M.remove_spurious_entries()
 # ...
-n1 = 4
-n2 = 4
-p1 = 1
+
+n1 = 16
+n2 = 8
+p1 = 2
 p2 = 1
 # ...
 
@@ -54,7 +66,7 @@ rank = comm.Get_rank()
 # ...
 
 # ... 2D MPI cart
-cart = Cart(npts=[n1, n2], pads=[p1, p2], periods=[True, True], reorder=True, comm=comm)
+cart = Cart(npts=[n1, n2], pads=[p1, p2], periods=[False, False], reorder=True, comm=comm)
 
 # ...
 V    = StencilVectorSpace(cart)
@@ -72,13 +84,9 @@ A = StencilMatrix(V2, V2)
 # ..
 
 # ... Populate A, B and X
-A[:, 0] =  5
-A[:, 1] =  0
-A[:,-1] =  0
+populate_1d_matrix(A)
+populate_1d_matrix(B)
 
-B[:, 0] =  4
-B[:, 1] =  0
-B[:,-1] = 0
 
 # ... Exchange Ghosts cell for X
 X[:, :] = 1.
@@ -90,32 +98,28 @@ Y[:,:]    = 0.
 #print('rank: ',rank, 'X: ', X._data.shape,  'Xt: ', Xtmp._data.shape, 'A: ', A._data.shape[0], 'B: ', B._data.shape[0])
 # ... Compute Kron prod
 for i1 in range(V1.npts[0]):
-    i1_glob = i1 + V.starts[0]
 
     for i2 in range(V2.npts[0]):
-        i2_glob = i2 + V.starts[1]
 
+        Xtmp[i1, i2] = 0.
+
+        for k2 in range(-p2, p2+1):
+            j2 = i2 + k2
+            Xtmp[i1, i2] += X[i1, j2]*A[i2, k2]
+
+        update_ghost_regions(Xtmp, direction=1)
+        update_ghost_regions(Xtmp, direction=0)
+
+        # ...
         for k1 in range(-p1, p1+1):
+            j1 = i1 + k1
+            Y[i1, i2] += B[i1, k1]*Xtmp[j1, i2]
 
-            Xtmp[i1, i2] = 0.
-            for k2 in range(-p2, p2+1):
-                j1 = i1 + k1
-                j2 = i2 + k2
-                j1_glob = i1_glob + k1
-                j2_glob = i2_glob + k2
-                Xtmp[j1_glob, i2_glob] += X[j1_glob,j2_glob]*A[i2, k2]
-
-            # ... Exchange data in the direction n2
-            comm.Barrier()
-            update_ghost_regions(Xtmp, direction=1)
-
-            # ...
-            Y[i1, i2] += B[i1, k1]*Xtmp[i1, i2]
-
-        # ... Exchange data in the direction n1
-        comm.Barrier()
         update_ghost_regions(Y, direction=0)
+        update_ghost_regions(Y, direction=1)
+        # ...
 # ...
+
 for i in range(comm.Get_size()):
     if rank == i:
         print('rank= ', rank)
