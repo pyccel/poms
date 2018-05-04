@@ -95,27 +95,25 @@ for i1 in range(V1.npts[0]):
     for i2 in range(V2.npts[0]):
         i2_glob = i2 + V.starts[1]
 
+        Xtmp[i1_glob, i2_glob] = 0.
+
+        for k2 in range(-p2, p2+1):
+            j2 = i2 + k2
+            j2_glob = i2_glob + k2
+            Xtmp[i1_glob, i2_glob] += X[i1_glob, j2_glob]*A[i2, k2]
+
+        update_ghost_regions(Xtmp, direction=1)
+
+        # ...
         for k1 in range(-p1, p1+1):
+            j1 = i1 + k1
+            j1_glob = i1_glob + k1
+            Y[i1_glob, i2_glob] += B[i1, k1]*Xtmp[j1_glob, i2_glob]
 
-            Xtmp[i1, i2] = 0.
-            for k2 in range(-p2, p2+1):
-                j1 = i1 + k1
-                j2 = i2 + k2
-                j1_glob = i1_glob + k1
-                j2_glob = i2_glob + k2
-                Xtmp[j1_glob, i2_glob] += X[j1_glob,j2_glob]*A[i2, k2]
-
-            # ... Exchange data in the direction n2
-            comm.Barrier()
-            update_ghost_regions(Xtmp, direction=1)
-
-            # ...
-            Y[i1, i2] += B[i1, k1]*Xtmp[i1, i2]
-
-        # ... Exchange data in the direction n1
-        comm.Barrier()
         update_ghost_regions(Y, direction=0)
+        # ...
 # ...
+
 for i in range(comm.Get_size()):
     if rank == i:
         print('rank= ', rank)
