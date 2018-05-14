@@ -3,10 +3,10 @@ from numpy              import zeros, linspace
 from spl.linalg.stencil import StencilMatrix
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
-import time
+from mpi4py             import MPI
 
-# ...
-def kernel_b(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
+# ... Assembly of the elementary matrix
+def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
     mat[:,:,:,:] = 0.
     for il_1 in range(0, p1+1):
         for jl_1 in range(0, p1+1):
@@ -28,10 +28,9 @@ def kernel_b(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
 
                             v += (bi_x * bj_x + bi_y * bj_y) * wvol
                     mat[il_1, il_2, p1 + jl_1 - il_1, p2 + jl_2 - il_2] = v
-
 # ...
 
-# ... assembly v3 (from notebook)
+# ... Assembly of the stifness matrix
 def assembly(V, kernel):
 
     # ... sizes
@@ -57,8 +56,6 @@ def assembly(V, kernel):
     # ...
 
     # ... build matrices
-#    nc1 = V.ncells[0]
-#    nc2 = V.ncells[1]
     for ie1 in range(s1, e1+1-p1):
         for ie2 in range(s2, e2+1-p2):
             i_span_1 = spans_1[ie1]
@@ -70,24 +67,26 @@ def assembly(V, kernel):
             w2 = weights_2[:, ie2]
             kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat)
 
-            s1 = i_span_1 - p1 - 1
-            s2 = i_span_2 - p2 - 1
+            i1 = i_span_1 - p1 - 1
+            i2 = i_span_2 - p2 - 1
 
-            M._data[s1:s1+p1+1,s2:s2+p2+1,:,:] += mat[:,:,:,:]
+            M[i1:i1+p1+1,i2:i2+p2+1,:,:] += mat[:,:,:,:]
 # ...
 
-# ...
 #===============================================================================
 if __name__ == "__main__":
 
-
     # ... numbers of elements and degres
-    p1  = 3 ; p2  = 3
-    ne1 = 64 ; ne2 = 64
+    p1  = 2  ; p2  = 2
+    ne1 = 32 ; ne2 = 32
     # ...
 
-    print('> Grid   :: [{ne1},{ne2}]'.format(ne1=ne1, ne2=ne2))
-    print('> Degree :: [{p1},{p2}]'.format(p1=p1, p2=p2))
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    if rank == 0:
+        print('> Grid   :: [{ne1},{ne2}]'.format(ne1=ne1, ne2=ne2))
+        print('> Degree :: [{p1},{p2}]'.format(p1=p1, p2=p2))
 
     grid_1 = linspace(0., 1., ne1+1)
     grid_2 = linspace(0., 1., ne2+1)
@@ -95,11 +94,12 @@ if __name__ == "__main__":
     V1 = SplineSpace(p1, grid=grid_1)
     V2 = SplineSpace(p2, grid=grid_2)
 
-    V = TensorFemSpace(V1, V2)
+    V = TensorFemSpace(V1, V2, comm=comm)
 
-    # ... pure python version 3 (kernel_3 = kernel_2)
-    tb = time.time()
-    assembly(V, kernel_b)
-    te = time.time()
-    print('> Elapsed time: {}'.format(te-tb))
+    # ...
+    wt = MPI.Wtime()
+    assembly(V, kernel)
+    wt = MPI.Wtime() - wt
+
+    print('rank: ', rank, '> Elapsed time: {}'.format(wt))
     # ...
