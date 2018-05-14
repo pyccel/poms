@@ -2,7 +2,7 @@
 from numpy              import zeros, linspace
 from spl.linalg.stencil import StencilMatrix
 from spl.fem.splines    import SplineSpace
-from spl.fem.tensor     import TensorSpace
+from spl.fem.tensor     import TensorFemSpace
 import time
 
 # ...
@@ -57,6 +57,8 @@ def assembly(V, kernel):
     # ...
 
     # ... build matrices
+#    nc1 = V.ncells[0]
+#    nc2 = V.ncells[1]
     for ie1 in range(s1, e1+1-p1):
         for ie2 in range(s2, e2+1-p2):
             i_span_1 = spans_1[ie1]
@@ -70,6 +72,7 @@ def assembly(V, kernel):
 
             s1 = i_span_1 - p1 - 1
             s2 = i_span_2 - p2 - 1
+
             M._data[s1:s1+p1+1,s2:s2+p2+1,:,:] += mat[:,:,:,:]
 # ...
 
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     V1 = SplineSpace(p1, grid=grid_1)
     V2 = SplineSpace(p2, grid=grid_2)
 
-    V = TensorSpace(V1, V2)
+    V = TensorFemSpace(V1, V2)
 
     # ... pure python version 3 (kernel_3 = kernel_2)
     tb = time.time()
