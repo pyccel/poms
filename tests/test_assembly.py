@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
 from mpi4py             import MPI
 from numpy              import zeros, linspace
-from matrix_assembler   import kernel, assembly
 from spl.linalg.stencil import StencilMatrix
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
+
+from matrix_assembler   import kernel, assembly
 
 '''
 Parallel test of a stifness matrix assembly

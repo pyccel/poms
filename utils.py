@@ -28,7 +28,7 @@ def populate_2d_vector(X):
             X[i1,i2] = i1 + i2 + 1
 # ...
 
-# ... retrun Y = (B kron A) X
+# ... retrun Y = (B kron A) Xt
 def kron_dot_ref(B, A, X):
     from numpy import zeros
     from scipy.sparse import kron
@@ -45,16 +45,7 @@ def kron_dot_ref(B, A, X):
     [e1, e2] = V.ends
     [p1, p2] = V.pads
 
-    X_arr = zeros((e1+1-s1)*(e2+1-s2))
-
-    # ... TODO improve for parallel testing
-    i = 0
-    for i2 in range(s2, e2+1):
-        for i1 in range(s1, e1+1):
-            X_arr[i] = X[i1, i2]
-            i += 1
-    # ...
-
+    X_arr = X.toarray()
     Y = C.dot(X_arr)
 
     return  Y
@@ -79,16 +70,16 @@ def kron_solve_ref(B, A, Y):
     [p1, p2] = V.pads
 
     # ...
-    Y_arr = zeros((e1+1-s1)*(e2+1-s2))
-
-    # ... TODO improve for parallel testing
-    i = 0
-    for i2 in range(s2, e2+1):
-        for i1 in range(s1, e1+1):
-            Y_arr[i] = Y[i1, i2]
-            i += 1
-    # ...
-
+#    Y_arr = zeros((e1+1-s1)*(e2+1-s2))
+#
+#    # ... TODO improve for parallel testing
+#    i = 0
+#    for i2 in range(s2, e2+1):
+#        for i1 in range(s1, e1+1):
+#            Y_arr[i] = Y[i1, i2]
+#            i += 1
+#    # ...
+    Y_arr = Y.toarray()
     C_op  = splu(C)
     X = C_op.solve(Y_arr)
 
