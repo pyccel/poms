@@ -119,16 +119,18 @@ def kron_solve_par(B, A, Y):
     # ...
 
     # ...
+
     for i2 in range(e2-s2+1):
         Y_loc = Y[s1:e1+1, s2+i2].copy()
         subcomm_1.Allgatherv(Y_loc, Y_glob_1)
-
         Ytmp_glob_1[:,i2], A_sinfo = dgetrs(A_lu, A_piv, Y_glob_1)
 
     for i1 in range(e1-s1+1):
         Ytmp_loc = Ytmp_glob_1[s1+i1, s2:e2+1].copy()
-        subcomm_2.Allgatherv(Ytmp_loc, Ytmp_glob_2)
-        X_glob_2[i1,:], B_sinfo = dgetrs(B_lu, B_piv, Ytmp_glob_2)
+        print('>>',V.cart._rank, (Ytmp_glob_1))
+#        subcomm_2.Allgatherv(Ytmp_loc, Ytmp_glob_2)
+
+        #X_glob_2[i1,:], B_sinfo = dgetrs(B_lu, B_piv, Ytmp_glob_2)
     # ...
 
     # ...

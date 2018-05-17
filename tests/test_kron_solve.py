@@ -74,13 +74,13 @@ def test_par(n1, n2, p1, p2):
     # ..
     X = kron_solve_par(B, A, Y)
 
-    for i in range(comm.Get_size()):
-        if rank == i:
-            print('rank= ', rank)
-            print('Y  = \n', X.toarray())
-            print('', flush=True)
-        comm.Barrier()
-    # ...
+#    for i in range(comm.Get_size()):
+#        if rank == i:
+#            print('rank= ', rank)
+#            print('Y  = \n', X.toarray())
+#            print('', flush=True)
+#        comm.Barrier()
+#    # ...
 
 ###############################################################################
 if __name__ == '__main__':

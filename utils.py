@@ -25,7 +25,7 @@ def populate_2d_vector(X):
 
     for i1 in range(s1, e1+1 ):
         for i2 in range(s2, e2+1):
-            X[i1,i2] = i1 + i2 + 1
+            X[i1,i2] = 10*i1 + i2 + 1
 # ...
 
 # ... retrun Y = (B kron A) Xt
