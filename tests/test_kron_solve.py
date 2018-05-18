@@ -10,7 +10,7 @@ from kron_product       import kron_solve_serial, kron_solve_par
 '''
 Test of solving: (B kron A) X = Y
 
-To launch, run: python3 tests/test_kron_03.py
+To launch, run: mpirun -n 4 python3 tests/test_kron_03.py
 '''
 
 # ... Serial test
@@ -35,7 +35,7 @@ def test_ser(n1, n2, p1, p2):
     # ..
     X = kron_solve_serial(B, A, Y)
 
-    X_ref = utils.kron_solve_ref(B, A, Y)
+    X_ref = utils.kron_solve_ref(A, B, Y)
 
     print('X =  \n', X.toarray())
     print('X_ref =  \n', X_ref)
@@ -74,13 +74,13 @@ def test_par(n1, n2, p1, p2):
     # ..
     X = kron_solve_par(B, A, Y)
 
-#    for i in range(comm.Get_size()):
-#        if rank == i:
-#            print('rank= ', rank)
-#            print('Y  = \n', X.toarray())
-#            print('', flush=True)
-#        comm.Barrier()
-#    # ...
+    for i in range(comm.Get_size()):
+        if rank == i:
+            print('rank= ', rank)
+            print('Y  = \n', X.toarray())
+            print('', flush=True)
+        comm.Barrier()
+    # ...
 
 ###############################################################################
 if __name__ == '__main__':
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     p1 = 1 ; p2 = 1
 
     # ... serial test
-#    test_ser(n1, n2, p1, p2)
+    #test_ser(n1, n2, p1, p2)
 
     # ... parallel test
     test_par(n1, n2, p1, p2)

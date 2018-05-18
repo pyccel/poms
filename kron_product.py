@@ -98,6 +98,7 @@ def kron_solve_par(B, A, Y):
 
     # ...
     V = Y.space
+    X = StencilVector(V)
 
     s1, s2 = V.starts
     e1, e2 = V.ends
@@ -108,8 +109,6 @@ def kron_solve_par(B, A, Y):
     # ...
 
     # ...
-    X = StencilVector(V)
-
     Y_glob_1 = np.zeros((n1))
 
     Ytmp_glob_1 = np.zeros((n1, e2-s2+1))
@@ -118,19 +117,19 @@ def kron_solve_par(B, A, Y):
     X_glob_2 = np.zeros((e1-s1+1, n2))
     # ...
 
-    # ...
 
+    # ...
     for i2 in range(e2-s2+1):
         Y_loc = Y[s1:e1+1, s2+i2].copy()
         subcomm_1.Allgatherv(Y_loc, Y_glob_1)
+
         Ytmp_glob_1[:,i2], A_sinfo = dgetrs(A_lu, A_piv, Y_glob_1)
 
     for i1 in range(e1-s1+1):
-        Ytmp_loc = Ytmp_glob_1[s1+i1, s2:e2+1].copy()
-        print('>>',V.cart._rank, (Ytmp_glob_1))
-#        subcomm_2.Allgatherv(Ytmp_loc, Ytmp_glob_2)
+        Ytmp_loc = Ytmp_glob_1[s1+i1, 0:e2+1-s2].copy()
+        subcomm_2.Allgatherv(Ytmp_loc, Ytmp_glob_2)
 
-        #X_glob_2[i1,:], B_sinfo = dgetrs(B_lu, B_piv, Ytmp_glob_2)
+        X_glob_2[i1,:], B_sinfo = dgetrs(B_lu, B_piv, Ytmp_glob_2)
     # ...
 
     # ...
@@ -139,42 +138,4 @@ def kron_solve_par(B, A, Y):
     return X
     # ...
 
-# ...
-
-# ... TODO debug
-def kron_dot_glob(B, A,  X):
-    # ...
-    V = X.space
-    T = StencilVector(V)
-
-    Y = StencilVector(V)
-    Y[:,:] = 0.
-    # ...
-
-    # ..
-    for i1 in range(V.npts[0]):
-
-        i1_glob = i1 + V.starts[0]
-
-        for i2 in range(V.npts[1]):
-            i2_glob = i2 + V.starts[1]
-
-            T[i1_glob, i2_glob] = 0.
-
-            for k2 in range(-p2, p2+1):
-                j2_glob = i2_glob + k2
-                T[i1_glob, i2_glob] += X[i1_glob, j2_glob]*B[i2, k2]
-
-            T.update_ghost_regions(direction=1)
-
-            # ...
-            for k1 in range(-p1, p1+1):
-                j1_glob = i1_glob + k1
-                Y[i1_glob, i2_glob] += A[i1, k1]*T[j1_glob, i2_glob]
-
-            Y.update_ghost_regions(direction=0)
-            # ...
-    # ...
-
-    return Y
 # ...

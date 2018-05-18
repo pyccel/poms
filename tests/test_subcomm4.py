@@ -36,18 +36,20 @@ X_glob = np.zeros((n1))
 X_loc = X[s1:e1+1].copy()
 subcomm_1.Allgatherv(X_loc, X_glob)
 
+
 Y_glob = np.zeros((n2))
 Y_loc = X_glob[s2:e2+1].copy()
+print('>>',rank, (X_glob), (Y_loc))
 subcomm_2.Allgatherv(Y_loc, Y_glob)
 
-for i in range(comm.Get_size()):
-    if rank == i:
-        print('---------------------')
-        print('rank ', rank)
-        print('X_LOC  = ', X_loc)
-        print('X_GLOB = ', X_glob)
-        print('Y_LOC  = ', Y_loc)
-        print('Y_GLOB = ', Y_glob)
-        print('', flush=True)
-    comm.Barrier()
+#for i in range(comm.Get_size()):
+#    if rank == i:
+#        print('---------------------')
+#        print('rank ', rank)
+#        print('X_LOC  = ', X_loc)
+#        print('X_GLOB = ', X_glob)
+#        print('Y_LOC  = ', Y_loc)
+#        print('Y_GLOB = ', Y_glob)
+#        print('', flush=True)
+#    comm.Barrier()
 # ...
