@@ -35,7 +35,7 @@ V = TensorFemSpace(V1, V2, comm=comm)
 
 # ...
 wt = MPI.Wtime()
-assembly(V, kernel)
+M  = assembly(V, kernel)
 wt = MPI.Wtime() - wt
 
 print('rank: ', rank, '> Elapsed time: {}'.format(wt))

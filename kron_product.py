@@ -104,8 +104,8 @@ def kron_solve_par(B, A, Y):
     e1, e2 = V.ends
     n1, n2 = V.npts
 
-    subcomm_1 = V.cart._subcomm[0]
-    subcomm_2 = V.cart._subcomm[1]
+    subcomm_1 = V.cart.subcomm[0]
+    subcomm_2 = V.cart.subcomm[1]
     # ...
 
     # ...
