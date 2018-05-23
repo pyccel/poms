@@ -6,6 +6,7 @@ from spl.fem.tensor     import TensorFemSpace
 from mpi4py             import MPI
 
 # ... Assembly of the elementary matrix
+# ... the weak form of -(uxx + uyy) + u
 def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
     mat[:,:,:,:] = 0.
     for il_1 in range(0, p1+1):

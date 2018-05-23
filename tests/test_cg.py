@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from mpi4py             import MPI
 from numpy              import zeros, ones, linspace
+from numpy.linalg       import norm
 from spl.linalg.stencil import StencilMatrix, StencilVector
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
@@ -18,8 +19,8 @@ if __name__ == '__main__':
 
 
     # ... Fine Grid: numbers of elements and degres
-    p1  = 1 ; p2  = 1
-    ne1 = 4 ; ne2 = 4
+    p1  = 2 ; p2  = 2
+    ne1 = 8 ; ne2 = 8
     # ...
 
     comm = MPI.COMM_WORLD
@@ -32,8 +33,8 @@ if __name__ == '__main__':
     grid_1 = linspace(0., 1., ne1+1)
     grid_2 = linspace(0., 1., ne2+1)
 
-    S1 = SplineSpace(p1, grid=grid_1, dirichlet=(True, True))
-    S2 = SplineSpace(p2, grid=grid_2, dirichlet=(True, True))
+    S1 = SplineSpace(p1, grid=grid_1)
+    S2 = SplineSpace(p2, grid=grid_2)
 
     S = TensorFemSpace(S1, S2, comm=comm)
     V = S.vector_space
@@ -49,15 +50,29 @@ if __name__ == '__main__':
     # Fill in vector with random values, then update ghost regions
     for i1 in range(s1,e1+1):
         for i2 in range(s2,e2+1):
-            x0[i1,i2] = 2*i1 + 3*i2 + 1.
+            x0[i1,i2] = 1.
     x0.update_ghost_regions()
 
     #... Compute matrix-vector product
     b = A.dot(x0)
 
+    # ... Solve the system
+    wt = MPI.Wtime()
+    x1, info = cg(A, b, tol=1e-12, verbose=True)
+    wt = MPI.Wtime() - wt
 
-    x1, info = cg(A, b, tol=1e-15, verbose=False)
-    print("A = \n", A.toarray())
-#    print("x1 = \n", x1.toarray())
-#    print("x0 = \n", x0.toarray())
-    print("info= ", info)
+    # ...
+    err1 = x1-x0
+
+   # ..
+    for i in range(comm.Get_size()):
+        if rank == i:
+            print('rank= ', rank)
+#            print("x0 = \n", x0.toarray())
+#            print("x1 = \n", x1.toarray())
+            print("info= ", info)
+            print("err_norm= ", norm(err1.toarray()))
+            print('elapsed time: {}'.format(wt))
+            print('', flush=True)
+        comm.Barrier()
+    # ...
