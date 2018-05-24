@@ -27,7 +27,7 @@ def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
 
                             wvol = w1[g1] * w2[g2]
 
-                            v += (bi_0*bj_0 + bi_x * bj_x + bi_y * bj_y) * wvol
+                            v += (bi_0*bj_0 + bi_x*bj_x + bi_y*bj_y)*wvol
                     mat[il_1, il_2, p1 + jl_1 - il_1, p2 + jl_2 - il_2] = v
 # ...
 

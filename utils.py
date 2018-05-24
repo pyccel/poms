@@ -16,6 +16,17 @@ def populate_1d_matrix(M, diag):
     M.remove_spurious_entries()
 # ...
 
+# ...
+def populate_2d_matrix(M, diag):
+    p1 = M.pads[0]
+    p2 = M.pads[1]
+
+    for k1 in range(-p1,p1+1):
+        for k2 in range(-p2,p2+1):
+            M[:,:,k1,k2] = 10.- abs(k1)-abs(k2)
+    M.remove_spurious_entries()
+# ...
+
 # .. Fill in stencil vector
 def populate_2d_vector(X):
     e1 = X.ends[0]
@@ -25,7 +36,7 @@ def populate_2d_vector(X):
 
     for i1 in range(s1, e1+1 ):
         for i2 in range(s2, e2+1):
-            X[i1,i2] = 10*i1 + i2 + 1
+            X[i1,i2] = 1.
 # ...
 
 # ... retrun Y = (B kron A) Xt
