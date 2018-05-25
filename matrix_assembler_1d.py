@@ -25,10 +25,14 @@ def assembly_matrices(V):
     stiffness = StencilMatrix( V.vector_space, V.vector_space )
     # ...
 
-#    print('>>> ', V.vector_space.cart._rank, s1, e1+1-p1)
     # ... build matrices
+    if V.vector_space.cart._rank == 0:
+        se = s1
+    else:
+        se = s1-p1
+    ee = e1+1-p1
 
-    for ie1 in range(s1, e1+1-p1):
+    for ie1 in range(se, ee) :
         i_span_1 = spans_1[ie1]
         for il_1 in range(0, p1+1):
             for jl_1 in range(0, p1+1):
@@ -49,12 +53,14 @@ def assembly_matrices(V):
                     v_m += bi_0 * bj_0 * wvol
                     v_s += (bi_x * bj_x) * wvol
 
-                if V.vector_space.cart._rank ==0:
-                    print (i1, j1, j1-i1)
+#                if V.vector_space.cart._rank == 1:
+#                    print (ie1, i1, j1,  j1 - i1)
                 mass[i1, j1 - i1] += v_m
                 stiffness[i1, j1 - i1]  += v_s
+
     # ...
 
+    return stiffness
 
 # ...
 
