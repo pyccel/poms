@@ -61,8 +61,8 @@ if __name__ == '__main__':
         if rank == i:
             print('rank= ', rank)
             print("A = \n", A.toarray())
-            print("x = \n", x.toarray())
-            print("b = \n", b.toarray())
+#            print("x = \n", x.toarray())
+#            print("b = \n", b.toarray())
             print('', flush=True)
         comm.Barrier()
     # ...

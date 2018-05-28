@@ -26,37 +26,50 @@ def assembly_matrices(V):
     # ...
 
     # ... build matrices
-    if V.vector_space.cart._rank == 0:
+    current_rank = V.vector_space.cart._rank
+    last_rank    = V.vector_space.cart._size-1
+
+
+    if current_rank == last_rank == 0:
         se = s1
+        ee = e1 - p1
+    elif current_rank == 0:
+        se = s1
+        ee = e1
+    elif current_rank == last_rank:
+        se = s1 - p1
+        ee = e1 - p1
     else:
-        se = s1-p1
-    ee = e1+1-p1
+        se = s1 - p1
+        ee = e1
 
-    for ie1 in range(se, ee) :
+
+    for ie1 in range(se, ee+1) :
         i_span_1 = spans_1[ie1]
+
         for il_1 in range(0, p1+1):
-            for jl_1 in range(0, p1+1):
-                i1 = i_span_1 - p1  - 1 + il_1
-                j1 = i_span_1 - p1  - 1 + jl_1
+            i1 = i_span_1 - p1  - 1 + il_1
 
-                v_m = 0.0
-                v_s = 0.0
-                for g1 in range(0, k1):
-                    bi_0 = basis_1[il_1, 0, g1, ie1]
-                    bi_x = basis_1[il_1, 1, g1, ie1]
+            if s1 <= i1 <= e1:
+                for jl_1 in range(0, p1+1):
+                    j1   = i_span_1 - p1  - 1 + jl_1
+                    v_m = 0.0
+                    v_s = 0.0
 
-                    bj_0 = basis_1[jl_1, 0, g1, ie1]
-                    bj_x = basis_1[jl_1, 1, g1, ie1]
+                    for g1 in range(0, k1):
+                        bi_0 = basis_1[il_1, 0, g1, ie1]
+                        bi_x = basis_1[il_1, 1, g1, ie1]
 
-                    wvol = weights_1[g1, ie1]
+                        bj_0 = basis_1[jl_1, 0, g1, ie1]
+                        bj_x = basis_1[jl_1, 1, g1, ie1]
 
-                    v_m += bi_0 * bj_0 * wvol
-                    v_s += (bi_x * bj_x) * wvol
+                        wvol = weights_1[g1, ie1]
 
-#                if V.vector_space.cart._rank == 1:
-#                    print (ie1, i1, j1,  j1 - i1)
-                mass[i1, j1 - i1] += v_m
-                stiffness[i1, j1 - i1]  += v_s
+                        v_m += bi_0 * bj_0 * wvol
+                        v_s += (bi_x * bj_x) * wvol
+
+                    mass[i1, j1 - i1] += v_m
+                    stiffness[i1, j1 - i1]  += v_s
 
     # ...
 
@@ -71,8 +84,8 @@ if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     # ...
-    ne = 7
-    p  = 1
+    ne = 6
+    p  = 2
 
     grid = np.linspace(0., 1., ne+1)
     S = SplineSpace(p, grid=grid)
@@ -100,6 +113,7 @@ if __name__ == '__main__':
         if rank == i:
             print('rank= ', rank)
             print("A = \n", M.toarray())
+#            print("A = \n", M._data)
             print('', flush=True)
         comm.Barrier()
     # ...
