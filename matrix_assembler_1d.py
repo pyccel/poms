@@ -45,31 +45,33 @@ def assembly_matrices(V):
 
 
     for ie1 in range(se, ee+1) :
-        i_span_1 = spans_1[ie1]
+        is1 = spans_1[ie1]
+        k  = is1 - p1 - 1
+        ks = max(0, s1-k)
+        ke = min(p1, e1-k)
 
-        for il_1 in range(0, p1+1):
-            i1 = i_span_1 - p1  - 1 + il_1
+        for il_1 in range(ks, ke+1):
+            i1 = is1 - p1  - 1 + il_1
 
-            if s1 <= i1 <= e1:
-                for jl_1 in range(0, p1+1):
-                    j1   = i_span_1 - p1  - 1 + jl_1
-                    v_m = 0.0
-                    v_s = 0.0
+            for jl_1 in range(0, p1+1):
+                j1   = is1 - p1  - 1 + jl_1
+                v_m = 0.0
+                v_s = 0.0
 
-                    for g1 in range(0, k1):
-                        bi_0 = basis_1[il_1, 0, g1, ie1]
-                        bi_x = basis_1[il_1, 1, g1, ie1]
+                for g1 in range(0, k1):
+                    bi_0 = basis_1[il_1, 0, g1, ie1]
+                    bi_x = basis_1[il_1, 1, g1, ie1]
 
-                        bj_0 = basis_1[jl_1, 0, g1, ie1]
-                        bj_x = basis_1[jl_1, 1, g1, ie1]
+                    bj_0 = basis_1[jl_1, 0, g1, ie1]
+                    bj_x = basis_1[jl_1, 1, g1, ie1]
 
-                        wvol = weights_1[g1, ie1]
+                    wvol = weights_1[g1, ie1]
 
-                        v_m += bi_0 * bj_0 * wvol
-                        v_s += (bi_x * bj_x) * wvol
+                    v_m += bi_0 * bj_0 * wvol
+                    v_s += (bi_x * bj_x) * wvol
 
-                    mass[i1, j1 - i1] += v_m
-                    stiffness[i1, j1 - i1]  += v_s
+                mass[i1, j1 - i1] += v_m
+                stiffness[i1, j1 - i1]  += v_s
 
     # ...
 
@@ -84,7 +86,7 @@ if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     # ...
-    ne = 6
+    ne = 5
     p  = 2
 
     grid = np.linspace(0., 1., ne+1)
@@ -104,16 +106,18 @@ if __name__ == '__main__':
     S._initialize()
 
     # ... Stifness Matrix
+    wt = MPI.Wtime()
     M = assembly_matrices(S)
+    wt = MPI.Wtime() - wt
 
     np.set_printoptions(linewidth=1000, precision=2)
 
    # ..
     for i in range(comm.Get_size()):
         if rank == i:
-            print('rank= ', rank)
-            print("A = \n", M.toarray())
-#            print("A = \n", M._data)
+            print('Rank= ', rank)
+            print(M.toarray())
+            print('Elapsed time= {}'.format(wt))
             print('', flush=True)
         comm.Barrier()
     # ...

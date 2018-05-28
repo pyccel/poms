@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
-from mpi4py             import MPI
+
 import numpy as np
-from numpy              import zeros, ones, linspace
 from numpy.linalg       import norm
+from mpi4py             import MPI
 from spl.linalg.stencil import StencilMatrix, StencilVector
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
