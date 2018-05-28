@@ -32,7 +32,7 @@ def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
 # ...
 
 # ... Assembly of the stifness matrix
-def assembly(V, kernel):
+def assembly(V):
 
     # ... sizes
     [s1, s2] = V.vector_space.starts
@@ -54,7 +54,7 @@ def assembly(V, kernel):
 
     # ... element matrix
     #mat = zeros((p1+1, p2+1, 2*p1+1, 2*p2+1), order='F')
-    mat = zeros((e1-s1+1, e2-s2+1, 2*p1+1, 2*p2+1), order='F')
+#    mat = zeros((e1-s1+1, e2-s2+1, 2*p1+1, 2*p2+1), order='F')
     # ...
 
     # ...
@@ -90,33 +90,33 @@ def assembly(V, kernel):
         for ie2 in range(se2, ee2+1):
             i_span_2 = spans_2[ie2]
 
-            i1 = i_span_1 - p1 - 1
-            i2 = i_span_2 - p2 - 1
+            for il_1 in range(0, p1+1):
+                i1 = i_span_1 - p1  - 1 + il_1
 
-            if (s1 <= i1 <= e1) and (s2 <= i2 <= e2):
-                bs1 = basis_1[:, :, :, ie1]
-                bs2 = basis_2[:, :, :, ie2]
-                w1 = weights_1[:, ie1]
-                w2 = weights_2[:, ie2]
+                for jl_1 in range(0, p1+1):
+                    j1 = i_span_1 - p1  - 1 + jl_1
 
-                for il_1 in range(0, p1+1):
-                    for jl_1 in range(0, p1+1):
-                        for il_2 in range(0, p2+1):
-                            for jl_2 in range(0, p2+1):
+                    for il_2 in range(0, p2+1):
+                        i2 = i_span_2 - p2 - 1 + il_2
 
+                        for jl_2 in range(0, p2+1):
+                            j2 = i_span_2 - p2  - 1 + jl_2
+
+                            if (s1 <= i1 <= e1) and (s2 <= i2 <= e2):
                                 # ...
                                 v = 0.0
                                 for g1 in range(0, k1):
                                     for g2 in range(0, k2):
-                                        bi_0 = bs1[il_1, 0, g1] * bs2[il_2, 0, g2]
-                                        bi_x = bs1[il_1, 1, g1] * bs2[il_2, 0, g2]
-                                        bi_y = bs1[il_1, 0, g1] * bs2[il_2, 1, g2]
 
-                                        bj_0 = bs1[jl_1, 0, g1] * bs2[jl_2, 0, g2]
-                                        bj_x = bs1[jl_1, 1, g1] * bs2[jl_2, 0, g2]
-                                        bj_y = bs1[jl_1, 0, g1] * bs2[jl_2, 1, g2]
+                                        bi_0 = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                                        bi_x = basis_1[il_1, 1, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                                        bi_y = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 1, g2, ie2]
 
-                                        wvol = w1[g1] * w2[g2]
+                                        bj_0 = basis_1[jl_1, 0, g1, ie1] * basis_2[jl_2, 0, g2, ie2]
+                                        bj_x = basis_1[jl_1, 1, g1, ie1] * basis_2[jl_2, 0, g2, ie2]
+                                        bj_y = basis_1[jl_1, 0, g1, ie1] * basis_2[jl_2, 1, g2, ie2]
+
+                                        wvol = weights_1[g1, ie1] * weights_2[g2, ie2]
 
                                         v += (bi_0*bj_0 + bi_x*bj_x + bi_y*bj_y)*wvol
                                 # ...

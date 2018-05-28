@@ -8,7 +8,7 @@ from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 
 from spl.linalg.solvers import cg
-from matrix_assembler   import kernel, assembly
+from matrix_assembler_2d   import kernel, assembly
 
 
 ###############################################################################
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
 
     # ... Weak form: compute the stifeness matrix
-    A = assembly(S, kernel)
+    A = assembly(S)
 
     x = StencilVector(V)
 
