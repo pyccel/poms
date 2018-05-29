@@ -5,7 +5,7 @@ from spl.linalg.stencil import StencilMatrix
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 
-from matrix_assembler_2d_1   import assembly
+from matrix_assembler_2d   import kernel, assembly
 
 '''
 Parallel test of a stifness matrix assembly
@@ -14,7 +14,7 @@ To launch, run: mpirun -n 2 python3 tests/test_assembly.py
 '''
 
 # ... numbers of elements and degres
-p1  = 1 ; p2  = 1
+p1  = 1  ; p2  = 1
 ne1 = 4 ; ne2 = 4
 # ...
 
@@ -35,7 +35,7 @@ V = TensorFemSpace(V1, V2, comm=comm)
 
 # ...
 wt = MPI.Wtime()
-M  = assembly(V)
+M  = assembly(V, kernel)
 wt = MPI.Wtime() - wt
 
 np.set_printoptions(linewidth=10000, precision=2)
