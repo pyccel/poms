@@ -5,11 +5,13 @@ from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 from mpi4py             import MPI
 
-
-def kernel(ks1, ke1, p1, ks2, ke2, p2, k1, k2, bs1, bs2, w1, w2, mat):
-    for il_1 in range(ks1, ke1+1):
+# ... Assembly of the elementary matrix
+# ... the weak form of -(uxx + uyy) + u
+def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
+    mat[:,:,:,:] = 0.
+    for il_1 in range(0, p1+1):
         for jl_1 in range(0, p1+1):
-            for il_2 in range(ks2, ke2+1):
+            for il_2 in range(0, p2+1):
                 for jl_2 in range(0, p2+1):
 
                     v = 0.0
@@ -30,7 +32,6 @@ def kernel(ks1, ke1, p1, ks2, ke2, p2, k1, k2, bs1, bs2, w1, w2, mat):
 # ...
 
 # ... Assembly of the stifness matrix
-# ... the weak form of: - (uxx + uyy) + u
 def assembly(V, kernel):
 
     # ... sizes
@@ -51,58 +52,26 @@ def assembly(V, kernel):
     M = StencilMatrix(V.vector_space, V.vector_space)
     # ...
 
-    # ... distributed ends elements
-    current_rank = V.vector_space.cart._rank
-    last_rank    = V.vector_space.cart._size - 1
-
-    if current_rank == last_rank == 0:
-        se1 = s1
-        ee1 = e1 - p1
-        se2 = s2
-        ee2 = e2 - p2
-    elif current_rank == 0:
-        se1 = s1
-        ee1 = e1
-        se2 = s2
-        ee2 = e2
-    elif current_rank == last_rank:
-        se1 = s1 - p1
-        ee1 = e1 - p1
-        se2 = s2 - p2
-        ee2 = e2 - p2
-    else:
-        se1 = s1 - p1
-        ee1 = e1
-        se2 = s2 - p2
-        ee2 = e2
+    # ... element matrix
+    mat = zeros((p1+1, p2+1, 2*p1+1, 2*p2+1), order='F')
     # ...
 
     # ... build matrices
-    for ie1 in range(se1, ee1+1):
-        i_span_1 = spans_1[ie1]
-        ks1 = max(0 , s1 - i_span_1 + p1 + 1)
-        ke1 = min(p1, e1 - i_span_1 + p1 + 1)
-
-        for ie2 in range(se2, ee2+1):
+    for ie1 in range(s1, e1+1-p1):
+        for ie2 in range(s2, e2+1-p2):
+            i_span_1 = spans_1[ie1]
             i_span_2 = spans_2[ie2]
-            ks2 = max(0 , s2 - i_span_2 + p2 + 1)
-            ke2 = min(p2, e2 - i_span_2 + p2 + 1)
 
             bs1 = basis_1[:, :, :, ie1]
             bs2 = basis_2[:, :, :, ie2]
             w1 = weights_1[:, ie1]
             w2 = weights_2[:, ie2]
-
-            mat = zeros((ke1+1-ks1, ke2+1-ks2, 2*p1+1, 2*p2+1), order='F')
-            kernel(ks1, ke1, p1, ks2, ke2, p2, k1, k2, bs1, bs2, w1, w2, mat)
+            kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat)
 
             i1 = i_span_1 - p1 - 1
             i2 = i_span_2 - p2 - 1
 
-            M[i1+ks1:i1+ke1+1, i2+ks2:i2+ke2+1,:,:] += mat[:,:,:,:]
-            # ...
-
-
+            M[i1:i1+p1+1,i2:i2+p2+1,:,:] += mat[:,:,:,:]
     # ...
 
     return M

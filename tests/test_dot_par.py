@@ -1,14 +1,12 @@
 # -*- coding: UTF-8 -*-
-from mpi4py             import MPI
 import numpy as np
-from numpy              import zeros, ones, linspace
+from mpi4py             import MPI
 from numpy.linalg       import norm
 from spl.linalg.stencil import StencilMatrix, StencilVector
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 
-from spl.linalg.solvers import cg
-from matrix_assembler_2d   import kernel, assembly
+from matrix_assembler   import assembly
 
 
 ###############################################################################
@@ -48,7 +46,7 @@ if __name__ == '__main__':
     # Fill in vector with random values, then update ghost regions
     for i1 in range(s1, e1+1):
         for i2 in range(s2, e2+1):
-            x[i1,i2] = i1+i2
+            x[i1,i2] = 1.+i1+i2
     x.update_ghost_regions()
 
     #... Compute matrix-vector product
@@ -61,8 +59,8 @@ if __name__ == '__main__':
         if rank == i:
             print('rank= ', rank)
             print("A = \n", A.toarray())
-#            print("x = \n", x.toarray())
-#            print("b = \n", b.toarray())
+            print("x = \n", x.toarray())
+            print("b = \n", b.toarray())
             print('', flush=True)
         comm.Barrier()
     # ...

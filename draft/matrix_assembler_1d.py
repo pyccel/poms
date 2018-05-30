@@ -43,6 +43,7 @@ def assembly_matrices(V):
         se = s1 - p1
         ee = e1
 
+    print(current_rank, (s1, e1),V.vector_space.cart._size)
 
     for ie1 in range(se, ee+1) :
         is1 = spans_1[ie1]
@@ -86,8 +87,8 @@ if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     # ...
-    ne = 5
-    p  = 2
+    ne = 4
+    p  = 1
 
     grid = np.linspace(0., 1., ne+1)
     S = SplineSpace(p, grid=grid)
