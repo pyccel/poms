@@ -31,7 +31,6 @@ def crl(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
         print( "+ Iter. # | L2-norm of residual |")
         print( "+---------+---------------------+")
         template = "| {:7d} | {:19.2e} |"
-    k = 0
 
     # Iterate to convergence
     for k in range(1, maxiter+1):
@@ -86,7 +85,7 @@ def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
     r = b - A.dot(x)
     nrmr0 = sqrt(r.dot(r))
 
-    s = psolve(r)
+    s = psolve(A, r)
 
     sr = s.dot(r)
 
@@ -116,7 +115,7 @@ def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
             k -= 1
             break
 
-        s = psolve(r)
+        s = psolve(A, r)
 
         srold = sr
         sr = s.dot(r)
@@ -138,5 +137,106 @@ def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
 # ...
 
 # ...
+def jacobi(A, b):
 
+    from spl.linalg.stencil import StencilVector
+    n = A.shape[0]
+
+    assert(A.shape == (n,n))
+    assert(b.shape == (n, ))
+
+    V = b.space
+
+    [s1, s2] = V.starts
+    [e1, e2] = V.ends
+    [p1, p2] = V.pads
+
+    x = StencilVector(V)
+    x[:,:] = 0.
+
+    # ...
+    for i1 in range(s1, e1+1):
+        for i2 in range(s2, e2+1):
+            x[i1, i2] = A[i1, i2, 0, 0]
+            x[i1, i2] = b[i1, i2]/ x[i1, i2]
+    #...
+
+    return x
 # ...
+
+# ...The weighted Jacobi iterative method
+def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
+    from math import sqrt
+    from spl.linalg.stencil import StencilVector
+
+    n = A.shape[0]
+
+    assert(A.shape == (n,n))
+    assert(b.shape == (n, ))
+
+    V = b.space
+
+    if verbose:
+        print( "Damped Jacobi method:" )
+        print( "+---------+---------------------+")
+        print( "+ Iter. # | L2-norm of residual |")
+        print( "+---------+---------------------+")
+        template = "| {:7d} | {:19.2e} |"
+
+
+    # ... extract and invert the diagonal
+    def step_vector(V, A, r):
+        [s1, s2] = V.starts
+        [e1, e2] = V.ends
+
+        s= StencilVector(V)
+        s[:,:] = 0.
+
+        for i1 in range(s1, e1+1):
+            for i2 in range(s2, e2+1):
+                s[i1, i2] = r[i1, i2]/A[i1, i2, 0, 0]
+
+        return s
+    #...
+
+
+    # ...
+    omega = 2./3
+    # ...
+
+    # First guess of solution
+    if x0 is None:
+        x = 0.0 * b.copy()
+    else:
+        assert( x0.shape == (n,) )
+        x = x0.copy()
+
+    tol_sqr = tol**2
+
+
+    # Iterate to convergence
+    for k in range(1, maxiter+1):
+
+        r = b - A.dot(x)
+        nrmr = r.dot(r)
+        s = step_vector(V, A, r)
+        x  = x + omega*s
+
+        if nrmr < tol_sqr:
+            k -= 1
+            break
+
+
+        if verbose:
+            print( template.format(k, sqrt(nrmr)))
+
+    if verbose:
+        print( "+---------+---------------------+")
+
+    # Convergence information
+    info = {'niter': k, 'success': nrmr < tol_sqr, 'res_norm': sqrt(nrmr) }
+
+
+    return x, info
+# ...
+
