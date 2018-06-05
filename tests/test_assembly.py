@@ -15,7 +15,7 @@ To launch, run: mpirun -n 2 python3 tests/test_assembly.py
 
 # ... numbers of elements and degres
 p1  = 1 ; p2  = 1
-ne1 = 4 ; ne2 = 4
+ne1 = 16 ; ne2 = 16
 # ...
 
 comm = MPI.COMM_WORLD
@@ -44,7 +44,8 @@ np.set_printoptions(linewidth=10000, precision=2)
 for i in range(comm.Get_size()):
     if rank == i:
         print('rank= ', rank)
-        print(M.toarray())
+#        print(M.toarray())
+        print(M.shape)
         print('Elapsed time: {}'.format(wt))
         print('', flush=True)
     comm.Barrier()

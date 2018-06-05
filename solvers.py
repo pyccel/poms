@@ -66,7 +66,7 @@ def crl(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
 # ...
 
 # ...
-def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
+def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=10, verbose=False):
     from math import sqrt
 
     n = A.shape[0]
@@ -164,7 +164,7 @@ def jacobi(A, b):
 # ...
 
 # ...The weighted Jacobi iterative method
-def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
+def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=100, verbose=False):
     from math import sqrt
     from spl.linalg.stencil import StencilVector
 

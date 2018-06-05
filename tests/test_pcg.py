@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     # ... Weak form: compute the stifeness matrix
     A = assembly(S)
-
+    A = 1./(ne1+ne2)*A
     x0 = StencilVector(V)
 
     # Fill in vector with random values, then update ghost regions
