@@ -83,12 +83,12 @@ def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
 
     # First values
     r = b - A.dot(x)
+
     nrmr0 = sqrt(r.dot(r))
 
     s = psolve(A, r)
-
+    p = s
     sr = s.dot(r)
-
 
     if verbose:
         print( "CG solver:" )
@@ -99,7 +99,6 @@ def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
 
     # Iterate to convergence
     for k in range(1, maxiter+1):
-
 
         q = A.dot(p)
         alpha  = sr / p.dot(q)
@@ -160,7 +159,7 @@ def jacobi(A, b):
             x[i1, i2] = A[i1, i2, 0, 0]
             x[i1, i2] = b[i1, i2]/ x[i1, i2]
     #...
-
+    x.update_ghost_regions()
     return x
 # ...
 
@@ -175,6 +174,11 @@ def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
     assert(b.shape == (n, ))
 
     V = b.space
+    [s1, s2] = V.starts
+    [e1, e2] = V.ends
+
+    dr = StencilVector(V)
+    dr[:,:] = 0
 
     if verbose:
         print( "Damped Jacobi method:" )
@@ -183,24 +187,9 @@ def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
         print( "+---------+---------------------+")
         template = "| {:7d} | {:19.2e} |"
 
-
-    # ... extract and invert the diagonal
-    def step_vector(V, A, r):
-        [s1, s2] = V.starts
-        [e1, e2] = V.ends
-
-        s= StencilVector(V)
-        s[:,:] = 0.
-
-        for i1 in range(s1, e1+1):
-            for i2 in range(s2, e2+1):
-                s[i1, i2] = r[i1, i2]/A[i1, i2, 0, 0]
-
-        return s
     #...
 
-
-    # ...
+    # ... the parameter omega
     omega = 2./3
     # ...
 
@@ -218,10 +207,16 @@ def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
     for k in range(1, maxiter+1):
 
         r = b - A.dot(x)
-        nrmr = r.dot(r)
-        s = step_vector(V, A, r)
-        x  = x + omega*s
 
+        for i1 in range(s1, e1+1):
+            for i2 in range(s2, e2+1):
+                dr[i1, i2] = omega*r[i1, i2]/A[i1, i2, 0, 0]
+
+        dr.update_ghost_regions()
+
+        x  = x + dr
+
+        nrmr = dr.dot(dr)
         if nrmr < tol_sqr:
             k -= 1
             break
@@ -237,6 +232,6 @@ def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
     info = {'niter': k, 'success': nrmr < tol_sqr, 'res_norm': sqrt(nrmr) }
 
 
-    return x, info
+    return x
 # ...
 

@@ -7,8 +7,7 @@ from spl.linalg.stencil import StencilMatrix, StencilVector
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 
-from spl.linalg.solvers import cg
-from solvers import crl
+from solvers            import pcg, jacobi, damped_jacobi
 from matrix_assembler   import assembly
 
 '''
@@ -22,7 +21,7 @@ if __name__ == '__main__':
 
     # ... Fine Grid: numbers of elements and degres
     p1  = 1 ; p2  = 1
-    ne1 = 4 ; ne2 = 4
+    ne1 = 16 ; ne2 = 16
     # ...
 
     comm = MPI.COMM_WORLD
@@ -61,8 +60,9 @@ if __name__ == '__main__':
 
     # ... Solve the system
     wt = MPI.Wtime()
-    x1, info = cg(A, b, tol=1e-10, maxiter=1000, verbose=False)
-    #x1, info = crl(A, b, tol=1e-8, maxiter=1000, verbose=False)
+
+    pc = eval('damped_jacobi')
+    x1, info = pcg(A, pc, b, tol=1e-8, maxiter=1000, verbose=False)
     wt = MPI.Wtime() - wt
 
     # ...

@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # ... Solve the system
     wt = MPI.Wtime()
-    x1, info = damped_jacobi(A, b, tol=1e-6, maxiter=1000, verbose=False)
+    x1, info = damped_jacobi(A, b, tol=1e-5, maxiter=1000, verbose=False)
     wt = MPI.Wtime() - wt
 
     # ...
