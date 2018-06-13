@@ -81,15 +81,6 @@ def kron_solve_ref(B, A, Y):
     [p1, p2] = V.pads
 
     # ...
-#    Y_arr = zeros((e1+1-s1)*(e2+1-s2))
-#
-#    # ... TODO improve for parallel testing
-#    i = 0
-#    for i2 in range(s2, e2+1):
-#        for i1 in range(s1, e1+1):
-#            Y_arr[i] = Y[i1, i2]
-#            i += 1
-#    # ...
     Y_arr = Y.toarray()
     C_op  = splu(C)
     X = C_op.solve(Y_arr)
@@ -97,3 +88,48 @@ def kron_solve_ref(B, A, Y):
     return X
 # ...
 
+# ... v_arr: 2d numpy array
+def array_to_vect_stencil(v_space, v_arr):
+    from spl.linalg.stencil import StencilVector
+
+    v_stencil = StencilVector(v_space)
+
+    idx_to  = tuple( slice(p,-p) for p in v_space.pads )
+    idx_arr = tuple( slice(s,e+1) for s,e in zip(v_space.starts, v_space.ends) )
+    v_stencil._data[idx_to] = v_arr[idx_arr]
+
+    return v_stencil
+# ...
+
+# ... return matrix stencil 1d
+def array_to_mat_stencil(n, p, v_arr):
+    from spl.linalg.stencil import StencilMatrix,StencilVectorSpace
+    from spl.core.interface import make_open_knots, compute_spans
+
+    V = StencilVectorSpace([n], [p], [False])
+    m_stencil = StencilMatrix(V, V)
+
+    n = V.npts[0]
+    s = V.starts[0]
+    e = V.ends[0]
+    p = V.pads[0]
+
+    T = make_open_knots(p, n)
+    spans = compute_spans(p, n, T)
+
+    for ie in range(s, e):
+        i = spans[ie]
+        k  = i - p - 1
+        ks = max(0, s-k)
+        ke = min(p, e-k)
+
+        for il in range(ks, ke+1):
+            i1 = i - p  - 1 + il
+
+            for jl in range(0, p+1):
+                j1   = i - p  - 1 + jl
+                m_stencil[i1, j1 - i1] =  v_arr[i1, j1]
+
+
+    return m_stencil
+# ...

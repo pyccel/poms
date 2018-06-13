@@ -66,7 +66,7 @@ def crl(A, b, x0=None, tol=1e-5, maxiter=1000, verbose=False):
 # ...
 
 # ...
-def pcg(A, psolve, b, x0=None, tol=1e-5, maxiter=10, verbose=False):
+def pcg(A, psolve, b, x0=None, tol=1e-6, maxiter=100, verbose=False):
     from math import sqrt
 
     n = A.shape[0]
@@ -164,7 +164,7 @@ def jacobi(A, b):
 # ...
 
 # ...The weighted Jacobi iterative method
-def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=100, verbose=False):
+def damped_jacobi(A, b, x0=None, tol=1e-6, maxiter=10, verbose=False):
     from math import sqrt
     from spl.linalg.stencil import StencilVector
 
@@ -233,5 +233,76 @@ def damped_jacobi(A, b, x0=None, tol=1e-5, maxiter=100, verbose=False):
 
 
     return x
+# ...
+
+# ...
+def pcg_glt(A, M1, M2, b, x0=None, tol=1e-6, maxiter=100, verbose=False):
+    from math import sqrt
+    from kron_product import kron_solve_par
+
+    n = A.shape[0]
+
+    assert( A.shape == (n,n) )
+    assert( b.shape == (n, ) )
+
+    # First guess of solution
+    if x0 is None:
+        x = 0.0 * b.copy()
+    else:
+        assert( x0.shape == (n,) )
+        x = x0.copy()
+
+    # First values
+    r = b - A.dot(x)
+
+    nrmr0 = sqrt(r.dot(r))
+
+    s = kron_solve_par(M2, M1, r)
+    p = s
+    sr = s.dot(r)
+
+    if verbose:
+        print( "CG-GL-GLTT solver:" )
+        print( "+---------+---------------------+")
+        print( "+ Iter. # | L2-norm of residual |")
+        print( "+---------+---------------------+")
+        template = "| {:7d} | {:19.2e} |"
+
+    # Iterate to convergence
+    for k in range(1, maxiter+1):
+
+        q = A.dot(p)
+        alpha  = sr / p.dot(q)
+
+        x  = x + alpha*p
+        r  = r - alpha*q
+
+        s = A.dot(r)
+
+        nrmr = r.dot(r)
+
+        if nrmr < tol*nrmr0:
+            k -= 1
+            break
+
+        s = kron_solve_par(M2, M1, r)
+
+        srold = sr
+        sr = s.dot(r)
+
+        beta = sr/srold
+
+        p = s + beta*p
+
+        if verbose:
+            print( template.format(k, sqrt(nrmr)))
+
+    if verbose:
+        print( "+---------+---------------------+")
+
+    # Convergence information
+    info = {'niter': k, 'success': nrmr < tol*nrmr0, 'res_norm': sqrt(nrmr) }
+
+    return x, info
 # ...
 

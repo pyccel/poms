@@ -1,27 +1,7 @@
 # -*- coding: UTF-8 -*-
 import numpy as np
 from scipy.sparse import coo_matrix
-
-# ...
-def interpolation_matrix(nf, nc):
-    """
-    Returns the interpolation matrix between two levels
-    """
-    # nf = 2*nc
-    P = np.zeros((nc, nf))
-    b = 0.5 * np.array([1., 2., 1.])
-
-    for i in range(0, nc):
-        j = 2*i
-        P[i, j:j+3] = b
-
-    R = 0.5 * P.transpose()
-
-    P = coo_matrix(P)
-    R = coo_matrix(R)
-
-    return P, R
-# ...
+from spl.linalg.stencil import StencilVectorSpace, StencilMatrix
 
 # ...
 def knots_to_insert(Tf, nf, pf, Tc, nc, pc):
@@ -63,7 +43,7 @@ if __name__ == '__main__':
 
     pf = 3
     nf = 12
-    # nf = nc + 2p
+
     Tc = make_open_knots(pc, nc)
     Tf = make_open_knots(pf, nf)
 

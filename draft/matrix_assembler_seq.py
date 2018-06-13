@@ -32,7 +32,7 @@ def kernel(p1, p2, k1, k2, bs1, bs2, w1, w2, mat):
 # ...
 
 # ... Assembly of the stifness matrix
-def assembly(V, kernel):
+def assembly_seq(V, kernel):
 
     # ... sizes
     [s1, s2] = V.vector_space.starts

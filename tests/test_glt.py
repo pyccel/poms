@@ -7,8 +7,10 @@ from spl.linalg.stencil import StencilMatrix, StencilVector
 from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 
-from solvers            import pcg, jacobi, damped_jacobi
+from solvers            import pcg_glt
 from matrix_assembler   import assembly
+from utils import array_to_mat_stencil
+from spl.core.interface import collocation_cardinal_splines
 
 '''
 Test of parallel cg of Ax=b, A is Laplacian matrix
@@ -21,7 +23,7 @@ if __name__ == '__main__':
 
     # ... Fine Grid: numbers of elements and degres
     p1  = 1 ; p2  = 1
-    ne1 = 16 ; ne2 = 16
+    ne1 = 4 ; ne2 = 4
     # ...
 
     comm = MPI.COMM_WORLD
@@ -42,7 +44,7 @@ if __name__ == '__main__':
 
     s1, s2 = V.starts
     e1, e2 = V.ends
-
+    n1, n2 = V.npts
 
     # ... Weak form: compute the stifeness matrix
     A = assembly(S)
@@ -57,11 +59,15 @@ if __name__ == '__main__':
     #... Compute matrix-vector product
     b = A.dot(x0)
 
+    # collocation_matrix
+    C1 = collocation_cardinal_splines(p1, n1)
+    C2 = collocation_cardinal_splines(p2, n2)
+    M1 = array_to_mat_stencil(n1, p1, C1)
+    M2 = array_to_mat_stencil(n2, p2, C2)
+
     # ... Solve the system
     wt = MPI.Wtime()
-
-    pc = eval('damped_jacobi')
-    x1, info = pcg(A, pc, b, tol=1e-8, maxiter=1000, verbose=False)
+    x1, info = pcg_glt(A, M1, M2, b, tol=1e-8, maxiter=100, verbose=False)
     wt = MPI.Wtime() - wt
 
     # ...

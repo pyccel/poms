@@ -7,7 +7,7 @@ from mpi4py             import MPI
 from spl.ddm.cart       import Cart
 
 # ...
-def assembly_matrices_1d(V):
+def assembly_1d(V):
 
     # ... sizes
     [s1] = V.vector_space.starts
