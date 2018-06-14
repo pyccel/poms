@@ -1,0 +1,259 @@
+\documentclass[11 pt,xcolor=dvipsnames,xcolor=table]{beamer}
+\usetheme[
+	bullet=square,		% Other option: square
+	bigpagenumber,		% circled page number on lower right
+	topline=true,			% colored bar at the top of the frame 
+	shadow= true,			% Shading for beamer blocks
+	watermark=BG_lower,	% png file for the watermark
+	]{Flip}
+
+\setbeameroption{hide notes}
+
+\newcommand{\titleimage}{title}			% Custom title 
+\newcommand{\tanedo}{tanedolight}		% Custom author name
+\newcommand{\CMSSMDM}{CMSSMDMlight.png}	% light background plot
+\usepackage{picins}
+
+%%%%%%%%%%
+% FONTS %
+%%%%%%%%%%
+
+\usepackage{sfmath}		
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Usual LaTeX Packages %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{mathrsfs} 			% For Weinberg-esque letters
+\usepackage{cancel}				% For "SUSY-breaking" symbol
+\usepackage{slashed}            % for slashed characters in math mode
+\usepackage{amsthm}				% For theorem environment
+\usepackage{multirow}			% For multi row cells in table
+%\usepackage{tikzfeynman}		% For Feynman diagrams
+\usepackage{graphics}
+\usepackage{listings}
+\usepackage{mathpazo}
+\usepackage{media9}
+\addmediapath{./movies/}
+\graphicspath{{images/}}	% Put all images in this directory. Avoids clutter.
+\setbeamercovered{transparent}
+
+
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{mindmap,trees}	% For mind map
+% http://www.texample.net/tikz/examples/computer-science-mindmap/
+
+
+% SOME COMMANDS THAT I FIND HANDY
+
+\newcommand{\comment}[1]{\textcolor{comment}{\footnotesize{#1}\normalsize}} % comment mild
+\newcommand{\Comment}[1]{\textcolor{Comment}{\footnotesize{#1}\normalsize}} % comment bold
+\newcommand{\COMMENT}[1]{\textcolor{COMMENT}{\footnotesize{#1}\normalsize}} % comment crazy bold
+\newcommand{\Alert}[1]{\textcolor{Alert}{#1}} % louder alert
+\newcommand{\ALERT}[1]{\textcolor{ALERT}{#1}} % loudest alert
+%% "\alert" is already a beamer pre-defined
+%\newcommand{\blue}[1]{\textcolor{profound}{#1}}
+
+
+
+\defbeamertemplate*{title page}{customized}[1][]
+{\begin{center}
+  {\fontfamily{phv}\selectfont \Large{{\textcolor{brunfonce}{\inserttitle}}}}\par
+  \usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par
+  \bigskip
+  \usebeamerfont{author}\alert{\insertauthor}\par
+  \usebeamerfont{institute}\insertinstitute\par
+  \usebeamerfont{date}\insertdate\par
+  \usebeamercolor[fg]{titlegraphic}\inserttitlegraphic
+  \end{center}
+}
+\title[ECCM-ECFD 2018]{{\normalsize Parallel Multigrid Solver for Finite Elements using B-Spline}}
+
+\author[Jalal Lakhlili]{\underline{Jalal Lakhlili}\footnotemark[1],  Yaman G\"u\c{c}l\"u\footnotemark[1], Ahmed Ratnani\footnotemark[1] \\ (Tran-Minh Tran\footnotemark[2])}
+
+\institute{ 
+  \footnotetext[1]{Max-Planck-Institut f\"ur Plasmaphysik Garching, Germany.} 
+  \footnotetext[2]{Suiss Plasma Center - \'Ecole Polytechnique F\'ed\'erale de Lausanne, Switzerland.} 
+  }
+
+\date{{\color{white} -} \\ ECCM-ECFD 2018 \\ M.S. Mathematical aspects of isogeometric analysis
+ \\ Glasgow - \today}
+
+
+%%%%%%%%%%%%%%%
+%  ARA
+%\setbeamertemplate{itemize/enumerate body begin}{\normalsize}
+%\setbeamertemplate{itemize/enumerate subbody begin}{\tiny}
+
+\usepackage{pifont}
+\usepackage{color}
+\usepackage[table]{xcolor}
+\usepackage{xcolor}
+\definecolor{darkgreen}{RGB}{0,142,128}
+\definecolor{bleufonce}{RGB}{20,20,144}
+\definecolor{vertCEA_light}{RGB}{249,253,246}
+\definecolor{vertCEA_Light}{RGB}{230,246,216}
+%\definecolor{vertCEA_light}{RGB}{199,235,169}
+\definecolor{flameOrange}{RGB}{255,243,224}
+\definecolor{orangeCEA_Light}{RGB}{255,220,167}
+
+% tmp
+\definecolor{bleufonce}{RGB}{20,20,144}
+\definecolor{vertCEA_light}{RGB}{249,253,246}
+\definecolor{vertCEA_Light}{RGB}{230,246,216}
+%\definecolor{vertCEA_light}{RGB}{199,235,169}
+\definecolor{orangeCEA_light}{RGB}{255,243,224}
+\definecolor{orangeCEA_Light}{RGB}{255,220,167}
+\definecolor{darkgreen}{RGB}{0,142,128}
+\definecolor{bleufonce}{RGB}{0,142,128}
+\definecolor{orangelight}{RGB}{0,142,128}
+%
+
+
+\usepackage[framemethod=tikz]{mdframed}
+\usetikzlibrary{decorations.pathmorphing,calc}
+\usepackage{lipsum}% just to generate text for the example
+
+\newcommand{\dr}{\partial_R}
+\newcommand{\dz}{\partial_z}
+\newcommand{\dphi}{\partial_{\varphi}}
+\newcommand{\ephi}{e_{\varphi}}
+\newcommand{\lp}{\triangle_{pol}}
+\newcommand{\lpp}{\triangle_{pol}^2}
+\newcommand{\lpm}{\triangle_{pol}^{-1}}
+\newcommand{\gs}{\triangle^{*}}
+\newcommand{\U}{\mathbf{U}}
+\newcommand{\V}{\mathbf{V}}
+\newcommand{\vB}{\mathbf{B}}
+\newcommand{\vJ}{\mathbf{J}}
+\newcommand{\vE}{\mathbf{E}}
+\newcommand{\rot}{\nabla \times}
+\newcommand{\er}{e_R}
+\newcommand{\ez}{e_z}
+\newcommand{\rhoh}{R^2 \rho}
+\newcommand{\curls}{\mathrm{curl}\,}
+\newcommand{\divs}{\mathrm{div}\,}
+\newcommand{\divv}{\mathbf{div}\,}
+\newcommand{\curlv}{\mathbf{curl}\,}
+\newcommand{\xx}{\mathbf{x}\,}
+\newcommand{\vv}{\mathbf{v}\,}
+\newcommand{\ff}{\mathbf{f}}
+\newcommand{\uu}{\mathbf{u}}
+\newcommand{\nn}{\mathbf{n}}
+\newcommand{\EE}{\mathbf{E}}
+\newcommand{\FF}{\mathbf{F}}
+\newcommand{\JJ}{\mathbf{J}}
+\newcommand{\HH}{\mathbf{H}}
+\newcommand{\BB}{\mathbf{B}}
+\newcommand{\DD}{\mathbf{D}}
+\newcommand{\xixi}{\boldsymbol{\xi}\,}
+\newcommand{\Alt}{\mathrm{Alt}\,}
+\newcommand{\diff}{\mathrm{d}\,}
+\newcommand{\trace}{\mathrm{Tr}\,}
+\newcommand{\volume}{\mathrm{vol}\,}
+\newcommand{\id}{\mathrm{id}\,}
+\newcommand{\hess}{\mathbf{Hess}}
+\newcommand{\Hdiv}{H(\mbox{div}, \Omega)}
+\newcommand{\Hcurl}{H(\mbox{curl}, \Omega)}
+\newcommand{\Hcurlzero}{H_0(\mbox{curl}, \Omega)}
+\newcommand{\Hdivzero}{H_0(\mbox{div}, \Omega)}
+\newcommand{\fracp}[2]{\frac{\partial #1}{\partial #2}}  
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\Rotv}{\boldsymbol{\nabla} \times}
+\newcommand{\Rots}{\nabla \times}
+\newcommand{\Div}{\nabla \cdot}
+\newcommand{\Grad}{\boldsymbol{\nabla}}
+\newcommand{\dt}{\partial_t}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\diffcolor}{\textcolor{blue}}
+\newcommand{\twofluidcolor}{\textcolor{magenta}}
+\newcommand{\termsourcecolor}{\textcolor{darkgreen}}
+\newcommand{\st}{\overline{\overline{\mathbf{\Pi}}}}
+\newtheorem{proposition}{Proposition}
+\newcommand\tab[1][0.25cm]{\hspace*{#1}}
+
+\newcommand{\Vspline}{\mathcal{S}^{p,p,p}}
+\newcommand{\Xspline}{\mathcal{S}^{p-1,p-1,p-1}}
+
+\newcommand{\Wcurlspline}{
+  \begin{pmatrix}
+    \mathcal{S}^{p-1,p,p} \\ 
+    \mathcal{S}^{p,p-1,p} \\ 
+    \mathcal{S}^{p,p,p-1}
+  \end{pmatrix}
+}
+
+\newcommand{\Wdivspline}{
+  \begin{pmatrix}
+    \mathcal{S}^{p,p-1,p-1} \\ 
+    \mathcal{S}^{p-1,p,p-1} \\ 
+    \mathcal{S}^{p-1,p-1,p}
+  \end{pmatrix}
+}
+
+
+%\newcommand{\HcurlBS}{\mathcal{S}_{\alpha,\alpha-1,\alpha-1}^{p,p-1,p-1} \times \mathcal{S}_{\alpha-1,\alpha,\alpha-1}^{p-1,p,p-1} \times \mathcal{S}_{\alpha-1,\alpha-1,\alpha}^{p-1,p-1,p}}
+%
+%%\newcommand{\HdivBS}{\mathcal{S}_{\alpha,\alpha-1,\alpha-1}^{p,p-1,p-1} \times \mathcal{S}_{\alpha-1,\alpha,\alpha-1}^{p-1,p,p-1} \times \mathcal{S}_{\alpha-1,\alpha-1,\alpha}^{p-1,p-1,p}}
+%\newcommand{\HdivBS}{\mathcal{S}_{\alpha-1,\alpha,\alpha}^{p-1,p,p} \times \mathcal{S}_{\alpha,\alpha-1,\alpha}^{p,p-1,p} \times \mathcal{S}_{\alpha,\alpha,\alpha-1}^{p,p,p-1}}
+%\newcommand{\HunBS}{\mathcal{S}_{\alpha,\alpha,\alpha}^{p,p,p}}
+%\newcommand{\LdeuxBS}{\mathcal{S}_{\alpha-1,\alpha-1,\alpha-1}^{p-1,p-1,p-1}}
+
+% --- backup unnumbered frames
+\newcommand{\backupbegin}{
+   \newcounter{finalframe}
+   \setcounter{finalframe}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \setcounter{framenumber}{\value{finalframe}}
+}
+% ---
+
+\newcommand\wavydecor{%
+    \draw[decoration={coil,aspect=0.1,segment length=5pt,amplitude=0.8pt},decorate,line width=1.5pt,black]
+      (O|-P) -- (O);
+}
+
+\newmdenv[
+hidealllines=true,
+innerleftmargin=10pt,
+innerrightmargin=0pt,
+innertopmargin=0pt,
+innerbottommargin=0pt,
+leftmargin=-10pt,
+skipabove=.5\baselineskip,
+skipbelow=.5\baselineskip,
+singleextra={\wavydecor},
+firstextra={\wavydecor},
+secondextra={\wavydecor},
+middleextra={\wavydecor}
+]{wavysbar}
+%%%%%%%%%%%%%%%
+
+%\usefonttheme[onlysmall]{structurebold}
+
+\usepackage{subfigure}
+\def\JPicScale{0.25}
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Additional  settings %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% To use external nodes; http://www.texample.net/tikz/examples/beamer-arrows/
+\tikzstyle{every picture}+=[remember picture]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Actual content below %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% It's much nicer to have all the content in a separate file
+\include{content}
+
+
+\end{document}

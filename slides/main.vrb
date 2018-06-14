@@ -1,0 +1,26 @@
+\frametitle{Motivations}
+\framesubtitle{Particle In Cell with Static Electromagnetic field}
+
+{\scriptsize
+\begin{verbatim}
+  from caid.cad_geometry import linear
+  from caid.cad import revolve, extrude
+
+  crv = linear(points=points)[0]
+  srf_1 = revolve(crv, point=center, axis=2)
+  nrb_1 = extrude(srf_1, displ=L, axis=2)
+
+  srf_2 = revolve(crv, point=A, axis=2)
+  nrb_2 = revolve(srf, point=B, axis=1, angle=-np.pi/2)
+
+  nrb = join(nrb_1.reverse(2), nrb_2, axis=2)
+\end{verbatim}
+}
+\begin{figure}[!ht]
+\begin{center}
+\begin{tabular}{l}
+ \includegraphics[width=6cm,height=4cm]{figures/geo}
+\end{tabular}
+\end{center}
+\end{figure}
+
