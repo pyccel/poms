@@ -5,25 +5,83 @@ from spl.fem.splines    import SplineSpace
 from spl.fem.tensor     import TensorFemSpace
 from mpi4py             import MPI
 
-# ...
-def local_element_idx(start, end, pad, coord, n_proc):
 
-    if coord == 0:
-        se = start
-        ee = end
-    elif coord == n_proc-1:
-        se = start - pad
-        ee = end - pad
+# ...
+def assembly_1d(V):
+
+    # ... sizes
+    [s1] = V.vector_space.starts
+    [e1] = V.vector_space.ends
+    [p1] = V.vector_space.pads
+
+    k1 = V.quad_order
+    spans_1 = V.spans
+    basis_1 = V.basis
+    weights_1 = V.weights
+    # ...
+
+    # ... data structure
+    mass      = StencilMatrix( V.vector_space, V.vector_space )
+    stiffness = StencilMatrix( V.vector_space, V.vector_space )
+    # ...
+
+    # ... build matrices
+    current_rank = V.vector_space.cart._rank
+    last_rank    = V.vector_space.cart._size-1
+
+
+    if current_rank == last_rank == 0:
+        se = s1
+        ee = e1 - p1
+    elif current_rank == 0:
+        se = s1
+        ee = e1
+    elif current_rank == last_rank:
+        se = s1 - p1
+        ee = e1 - p1
     else:
-        se = start - pad
-        ee = end
+        se = s1 - p1
+        ee = e1
 
-    return se, ee
+    for ie1 in range(se, ee+1) :
+        is1 = spans_1[ie1]
+        k  = is1 - p1 - 1
+        ks = max(0, s1-k)
+        ke = min(p1, e1-k)
+
+        for il_1 in range(ks, ke+1):
+            i1 = is1 - p1  - 1 + il_1
+
+            for jl_1 in range(0, p1+1):
+                j1   = is1 - p1  - 1 + jl_1
+                v_m = 0.0
+                v_s = 0.0
+
+                for g1 in range(0, k1):
+                    bi_0 = basis_1[il_1, 0, g1, ie1]
+                    bi_x = basis_1[il_1, 1, g1, ie1]
+
+                    bj_0 = basis_1[jl_1, 0, g1, ie1]
+                    bj_x = basis_1[jl_1, 1, g1, ie1]
+
+                    wvol = weights_1[g1, ie1]
+
+                    v_m += bi_0 * bj_0 * wvol
+                    v_s += (bi_x * bj_x) * wvol
+
+                mass[i1, j1 - i1] += v_m
+                stiffness[i1, j1 - i1]  += v_s
+
+    # ...
+
+    return mass
+
 # ...
+
 
 # ... Assembly of the stifness matrix
 # ... the weak form of: - (uxx + uyy) + u
-def assembly(V):
+def assembly_2d(V):
 
     # ... sizes
     [s1, s2] = V.vector_space.starts
@@ -47,6 +105,21 @@ def assembly(V):
     rank   = V.vector_space.cart._rank
     procs  = V.vector_space.cart.nprocs
     coords = V.vector_space.cart.coords
+
+    # ...
+    def local_element_idx(start, end, pad, coord, n_proc):
+        if coord == 0:
+            se = start
+            ee = end
+        elif coord == n_proc-1:
+            se = start - pad
+            ee = end - pad
+        else:
+            se = start - pad
+            ee = end
+
+        return se, ee
+    # ...
 
     # ... monoproc case
     if procs == [1, 1]:
@@ -107,7 +180,7 @@ def assembly(V):
 # ...
 
 # ....
-def assembly_seq(V):
+def assembly_2d_seq(V):
 
     # ... sizes
     [s1, s2] = V.vector_space.starts
