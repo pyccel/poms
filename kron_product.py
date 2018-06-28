@@ -6,8 +6,8 @@ from spl.ddm.cart       import Cart
 from spl.linalg.stencil import StencilVectorSpace, \
                                StencilVector, StencilMatrix
 
-# ... Compute Y = (B kron A) X
-def kron_dot(B, A, X):
+# ... Compute Y = (B kron A) X (1st parallel version)
+def kron_dot_v1(B, A, X):
     # ...
     V = X.space
 
@@ -50,11 +50,46 @@ def kron_dot(B, A, X):
     # ...
 
     return Y
-
 # ...
 
-# ... Compute X, solution of (B kron A)X = Y
-# ... Serial Version
+# ... Compute Y = (B kron A) X (2nd parallel version)
+def kron_dot_v2(B, A, X):
+    # ...
+    V = X.space
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    [s1, s2] = V.starts
+    [e1, e2] = V.ends
+    [p1, p2] = V.pads
+
+    # ... For the results
+    Y = StencilVector(V)
+    Y[:,:] = 0.
+    # ...
+
+    # ... Temporary Vector
+    X_tmp = StencilVector(V)
+    # ...
+
+    # ...
+    X.update_ghost_regions()
+    # ...
+
+    # ..
+    for j1 in range(s1-p1, e1+p1+1):
+        for i2 in range(s2, e2+1):
+             X_tmp[j1,i2] = np.dot( X[j1,i2-p2:i2+p2+1], B[i2,:])
+
+    for i1 in range(s1, e1+1):
+        for i2 in range(s2, e2+1):
+             Y[i1,i2] = np.dot( A[i1,:], X_tmp[i1-p1:i1+p1+1,i2] )
+    Y.update_ghost_regions()
+
+    return Y
+# ...
+
+# ... Compute X, solution of (B kron A)X = Y (Serial Version)
 def kron_solve_serial(B, A, Y):
     from scipy.linalg.lapack import dgetrf, dgetrs
 
@@ -80,11 +115,9 @@ def kron_solve_serial(B, A, Y):
         X[i1, 0:n2], B_infos = dgetrs(B_lu, B_piv, X_tmp[0:n2, i1])
 
     return X
-
 # ...
 
-# ... Compute X, solution of (B kron A)X = Y
-# ... Parallel Version
+# ... Compute X, solution of (B kron A)X = Y (Parallel Version)
 def kron_solve_par(B, A, Y):
     from scipy.linalg.lapack import dgetrf, dgetrs
 
@@ -117,7 +150,6 @@ def kron_solve_par(B, A, Y):
     X_glob_2 = np.zeros((e1-s1+1, n2))
     # ...
 
-
     # ...
     for i2 in range(e2-s2+1):
         Y_loc = Y[s1:e1+1, s2+i2].copy()
@@ -137,5 +169,4 @@ def kron_solve_par(B, A, Y):
 
     return X
     # ...
-
 # ...
