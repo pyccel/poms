@@ -38,61 +38,6 @@ def populate_2d_vector(X):
             X[i1,i2] = 1.
 # ...
 
-# ... reference: return X, solution of (B kron A)X = Y
-def kron_solve_ref(B, A, Y):
-    from numpy import zeros
-    from scipy.sparse import csc_matrix, kron
-    from scipy.sparse.linalg import splu
-
-    # ...
-    A_csr = A.tocsr()
-    B_csr = B.tocsr()
-    C = csc_matrix(kron(B_csr, A_csr))
-
-    # ...
-    V = Y.space
-
-    [s1, s2] = V.starts
-    [e1, e2] = V.ends
-    [p1, p2] = V.pads
-
-    # ...
-    Y_arr = Y.toarray()
-    C_op  = splu(C)
-    X = C_op.solve(Y_arr)
-
-    return X
-# ...
-
-# ... serial test
-def test_ser(n1, n2, p1, p2):
-    # ... Vector Spaces
-    V  = StencilVectorSpace([n1, n2], [p1, p2], [False, False])
-    V1 = StencilVectorSpace([n1], [p1], [False])
-    V2 = StencilVectorSpace([n2], [p2], [False])
-
-    # ... Inputs
-    Y = StencilVector(V)
-    A = StencilMatrix(V1, V1)
-    B = StencilMatrix(V2, V2)
-    # ...
-
-    # ... Fill in A, B and X
-    populate_1d_matrix(A, 5.)
-    populate_1d_matrix(B, 6.)
-    populate_2d_vector(Y)
-    # ...
-
-    # ..
-    X = kron_solve_serial(B, A, Y)
-
-    X_ref = kron_solve_ref(A, B, Y)
-
-    print('X =  \n', X.toarray())
-    print('X_ref =  \n', X_ref)
-    # ...
-# ...
-
 # ... parallel test
 def test_par(n1, n2, p1, p2):
     # ...
@@ -122,14 +67,11 @@ def test_par(n1, n2, p1, p2):
     # ...
 
     # ..
-    X = kron_solve_par(B, A, Y)
+    wt = MPI.Wtime()
+    X  = kron_solve_par(B, A, Y)
+    wt = MPI.Wtime() - wt
 
-    for i in range(comm.Get_size()):
-        if rank == i:
-            print('rank= ', rank)
-            print('Y  = \n', X.toarray())
-            print('', flush=True)
-        comm.Barrier()
+    print('rank: ', rank, '- elapsed time: {}'.format(wt))
     # ...
 
 
@@ -137,12 +79,7 @@ def test_par(n1, n2, p1, p2):
 if __name__ == '__main__':
 
     # ... numbers of elements and degres
-    n1 = 4 ; n2 = 4
-    p1 = 1 ; p2 = 1
+    n1 = 8 ; n2 = 8
+    p1 = 3 ; p2 = 3
 
-    # ... serial test
-    #test_ser(n1, n2, p1, p2)
-
-    np.set_printoptions(linewidth=100000, precision=4)
-    # ... parallel test
     test_par(n1, n2, p1, p2)
