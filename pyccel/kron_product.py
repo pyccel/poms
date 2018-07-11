@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import utils
 import numpy as np
 from mpi4py             import MPI
 from spl.ddm.cart       import Cart
@@ -16,7 +15,7 @@ import kron_solve_par_pyccel
 
 
 def _update_ghost_regions_parallel( u, comm_cart, direction, shift_info,recv_types,send_types):
-    
+
     requests = [0]*4
     i = 0
     for disp in range(-1,2,2):
@@ -25,7 +24,7 @@ def _update_ghost_regions_parallel( u, comm_cart, direction, shift_info,recv_typ
         recv_type = recv_types[direction][ind]
         recv_req = comm_cart.Irecv((u, 1, recv_type), info_rank_source, disp+42 )
         requests[i] = recv_req
-        i +=1 
+        i +=1
 
     for disp in range(-1,2,2):
         ind = int(disp/2+0.5)
@@ -33,7 +32,7 @@ def _update_ghost_regions_parallel( u, comm_cart, direction, shift_info,recv_typ
         send_type = send_types[direction][ind]
         send_req = comm_cart.Isend( (u, 1, send_type), info_rank_dest, disp+42 )
         requests[i] = send_req
-        i +=1 
+        i +=1
 
     MPI.Request.Waitall( requests )
 
@@ -45,15 +44,15 @@ def kron_dot_v2(B, A, X):
     starts = V.starts
     ends = V.ends
     pads = V.pads
-    
+
     Y = StencilVector(V)
     Y._data[:,:] = 0.
-    
-  
+
+
     space     = X._space
     cart      = space.cart
     comm_cart = cart.comm_cart
-  
+
 
     shift_info = np.zeros((2,2,2))
 
@@ -79,7 +78,7 @@ def kron_dot_v2(B, A, X):
     _update_ghost_regions_parallel(X._data,comm_cart,1,shift_info,recv_types,send_types)
 
     kron_dot_pyccel(starts, ends, pads, X._data.T, X_tmp._data.T, Y._data.T, A._data.T, B._data.T)
- 
+
     _update_ghost_regions_parallel(Y._data,comm_cart,0,shift_info,recv_types,send_types)
     _update_ghost_regions_parallel(Y._data,comm_cart,1,shift_info,recv_types,send_types)
 
@@ -97,7 +96,7 @@ def kron_solve_serial(B, A, Y):
     A = A.toarray().copy(order = 'F')
     B = B.toarray().copy(order = 'F')
     X._data, Y._data = X._data.copy(order = 'F'), Y._data.copy(order = 'F')
- 
+
     kron_solve_serial_pyccel(B, A, X._data, Y._data, points, pads)
 
     return X
@@ -107,7 +106,7 @@ def kron_solve_serial(B, A, Y):
 # ... Compute X, solution of (B kron A)X = Y
 # ... Parallel Version
 def kron_solve_par(B, A, Y):
-    
+
     A = A.toarray().copy(order = 'F')
     B = B.toarray().copy(order = 'F')
     V = Y.space
@@ -120,15 +119,15 @@ def kron_solve_par(B, A, Y):
     sizes    = [None]*2
     for i in range(2):
         sizes[i] = V.cart.global_ends[i] - disps[i] + 1
-    
+
     subcoms = np.array([V.cart.subcomm[0].py2f(), V.cart.subcomm[1].py2f()])
     X._data = X._data.copy(order = 'F')
     Y._data = Y._data.copy(order = 'F')
-    
-    kron_solve_par_pyccel.mod_kron_solve_par_pyccel(B, A, X._data, Y._data, points, pads, 
-                                                   starts, ends, subcoms, sizes[0], 
+
+    kron_solve_par_pyccel.mod_kron_solve_par_pyccel(B, A, X._data, Y._data, points, pads,
+                                                   starts, ends, subcoms, sizes[0],
                                                    disps[0],sizes[1],disps[1])
     return X
     # ...
 
-# ... 
+# ...
