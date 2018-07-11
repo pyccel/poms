@@ -69,7 +69,7 @@ def kron_solve_par_pyccel(B, A, X, Y, points, pads, starts, ends, subcoms, size_
     ierr = -1
 
     #$ header macro (ab, IPIV, info), dgetrf(ab) := dgetrf(ab.shape[0], ab.shape[1], ab, ab.shape[0], IPIV, info)
-    #$ header macro (ab, info), dgetrs(ab,piv,b,s='N') := dgetrs(s,ab.shape[1],b.shape[0] , ab, ab.shape[0], piv,b,b.shape[0], info)
+    #$ header macro (ab, info), dgetrs(ab,piv,b,s='N') := dgetrs(s,ab.shape[1],1 , ab, ab.shape[0], piv,b,b.count, info)
     #$ header macro  x.Allgatherv(A,[B,Bcounts,Bdisps,Bdtype = B.dtype]) := mpi_allgatherv(A, A.count, A.dtype, B, Bcounts, Bdisps, Bdtype, x, ierr)
    
     
@@ -98,9 +98,9 @@ def kron_solve_par_pyccel(B, A, X, Y, points, pads, starts, ends, subcoms, size_
     B_piv   = zeros(min(n1,n2),dtype = 'int',order = 'F')
     A, A_piv, A_finfo = dgetrf(A)
     B, B_piv, B_finfo = dgetrf(B)
-    Y_loc = zeros(len(Y[s1:e1+1, 0]))
-    Ytmp_loc = zeros(len(Ytmp_glob_1[0, 0:e2+1-s2]))
-    
+    Y_loc = zeros(e1-s1+1)
+    Ytmp_loc = zeros(e2-s2+1)
+
     for i2 in range(e2-s2+1):
         Y_loc[:] = Y[p1:e1-s1+p1+1, i2+p2]
         subcomm_1.Allgatherv(Y_loc, [Y_glob_1, size_0, disp_0])
