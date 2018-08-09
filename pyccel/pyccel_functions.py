@@ -8,6 +8,7 @@ def kron_dot_pyccel(starts, ends, pads, X, X_tmp, Y, A, B):
     e2 = ends[1]
     p1 = pads[0]
     p2 = pads[1]
+
     for j1 in range(s1-p1, e1+p1+1):
         for i2 in range(s2, e2+1):
              
@@ -17,18 +18,15 @@ def kron_dot_pyccel(starts, ends, pads, X, X_tmp, Y, A, B):
         for i2 in range(s2, e2+1):
              Y[i1-s1+p1,i2-s2+p2] = sum(A[i1, k]*X_tmp[i1-s1+k, i2-s2+p2] for k in range(2*p1+1))
 
-    return Y,X_tmp
+    return Y
 
-#kron_dot_pyccel = epyccel(kron_dot_pyccel, header)
+kron_dot_pyccel = epyccel(kron_dot_pyccel, header)
 
 header='#$ header function kron_solve_serial_pyccel(double[:,:](order = F),double[:,:](order = F),double[:,:](order = F),double[:,:](order = F),int[:], int[:])'
 def kron_solve_serial_pyccel(B, A, X, Y, points, pads):
-    from pyccel.stdlib.internal.lapack import dgetrf,dgetrs
-    #from scipy.linalg.lapack import dgetrf, dgetrs
-
+    
+    from scipy.linalg.lapack import dgetrf, dgetrs
     from numpy import zeros
-    #$ header macro (ab, IPIV, info), dgetrf(ab) := dgetrf(ab.shape[0], ab.shape[1], ab, ab.shape[0], IPIV, info)
-    #$ header macro (b, info), dgetrs(ab,piv,b,s='N') := dgetrs(s,ab.shape[1],1 , ab, ab.shape[0], piv,b,b.count, info)
     
     n1 = points[0]
     n2 = points[1]
@@ -54,23 +52,16 @@ def kron_solve_serial_pyccel(B, A, X, Y, points, pads):
 
     return X
 
-#kron_solve_serial_pyccel = epyccel(kron_solve_serial_pyccel, header,libs = ['lapack'])
+kron_solve_serial_pyccel = epyccel(kron_solve_serial_pyccel, header,libs = ['lapack'])
 
 
 header ='#$ header function kron_solve_par_pyccel(double[:,:](order=F), double[:,:](order=F), double[:,:](order=F), double[:,:](order=F) ,int[:], int[:], int[:], int[:], int[:],int[:], int[:],int[:],int[:])'
 def kron_solve_par_pyccel(B, A, X, Y, points, pads, starts, ends, subcoms, size_0, disp_0, size_1, disp_1):
     
-    from pyccel.stdlib.internal.mpi import mpi_allgatherv
-    from pyccel.stdlib.internal.lapack import dgetrf, dgetrs
-    
-    #from scipy.linalg.lapack import dgetrf, dgetrs
-    #from mpi4py import MPI
+    from mpi4py import MPI
+    from scipy.linalg.lapack import dgetrf, dgetrs
     from numpy import zeros, zeros_like
     ierr = -1
-
-    #$ header macro (ab, IPIV, info), dgetrf(ab) := dgetrf(ab.shape[0], ab.shape[1], ab, ab.shape[0], IPIV, info)
-    #$ header macro (ab, info), dgetrs(ab,piv,b,s='N') := dgetrs(s,ab.shape[1],1 , ab, ab.shape[0], piv,b,b.count, info)
-    #$ header macro  x.Allgatherv(A,[B,Bcounts,Bdisps,Bdtype = B.dtype]) := mpi_allgatherv(A, A.count, A.dtype, B, Bcounts, Bdisps, Bdtype, x, ierr)
    
     
     subcomm_1 = subcoms[0]

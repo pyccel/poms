@@ -125,10 +125,10 @@ def test_par(n1, n2, p1, p2):
     X = kron_solve_par(B, A, Y)
 
     for i in range(comm.Get_size()):
-        if rank == i:
-            print('rank= ', rank)
-            print('Y  = \n', X.toarray())
-            print('', flush=True)
+        #if rank == i:
+           # print('rank= ', rank)
+          #  print('Y  = \n', X.toarray())
+           # print('', flush=True)
         comm.Barrier()
     # ...
 
@@ -137,8 +137,8 @@ def test_par(n1, n2, p1, p2):
 if __name__ == '__main__':
 
     # ... numbers of elements and degres
-    n1 = 4 ; n2 = 4
-    p1 = 1 ; p2 = 1
+    n1 = 150 ; n2 = 150
+    p1 = 10 ; p2 = 10
 
     # ... serial test
     #test_ser(n1, n2, p1, p2)
