@@ -9,7 +9,7 @@ from kron_product       import kron_solve_serial, kron_solve_par
 from spl.core.interface import collocation_cardinal_splines
 
 '''
-Test of solving: (B kron A) X = Y
+Test of solving: (A kron B) X = Y
 
 To launch, run: mpirun -n 4 python3 tests/test_kron_03.py
 '''
@@ -34,7 +34,7 @@ def test_ser(n1, n2, p1, p2):
     # ...
 
     # ..
-    X = kron_solve_serial(B, A, Y)
+    X = kron_solve_serial(A, B, Y)
 
     X_ref = utils.kron_solve_ref(A, B, Y)
 
@@ -73,7 +73,7 @@ def test_par(n1, n2, p1, p2):
     # ...
 
     # ..
-    X = kron_solve_par(B, A, Y)
+    X = kron_solve_par(A, B, Y)
 
     for i in range(comm.Get_size()):
         if rank == i:
@@ -112,7 +112,7 @@ def test_par_glt(n1, n2, p1, p2):
 
     # ..
     wt = MPI.Wtime()
-    X = kron_solve_par(M2, M1, Y)
+    X = kron_solve_par(M1, M2, Y)
     wt = MPI.Wtime() - wt
 
     for i in range(comm.Get_size()):

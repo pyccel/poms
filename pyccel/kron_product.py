@@ -37,7 +37,7 @@ def _update_ghost_regions_parallel( u, comm_cart, direction, shift_info,recv_typ
     MPI.Request.Waitall( requests )
 
 
-def kron_dot_v2(B, A, X):
+def kron_dot_v2(A, B, X):
     # ...
     V = X.space
 
@@ -86,7 +86,7 @@ def kron_dot_v2(B, A, X):
 
 
 
-def kron_solve_serial(B, A, Y):
+def kron_solve_serial(A, B, Y):
 
     V = Y.space
     X = StencilVector(V)
@@ -105,7 +105,7 @@ def kron_solve_serial(B, A, Y):
 
 # ... Compute X, solution of (B kron A)X = Y
 # ... Parallel Version
-def kron_solve_par(B, A, Y):
+def kron_solve_par(A, B, Y):
 
     A = A.toarray().copy(order = 'F')
     B = B.toarray().copy(order = 'F')

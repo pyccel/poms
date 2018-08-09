@@ -31,8 +31,8 @@ def test_ser(n1, n2, p1, p2):
 
     # ...
     Y_ref = utils.kron_dot_ref(A, B, X)
-    Y1 = kron_dot_v1(B, A, X)
-    Y2 = kron_dot_v2(B, A, X)
+    Y1 = kron_dot_v1(A, B, X)
+    Y2 = kron_dot_v2(A, B, X)
 
     print('Y_ref = \n', Y_ref)
     print('Y1    = \n', Y1.toarray())
@@ -69,7 +69,7 @@ def test_par_v1(n1, n2, p1, p2):
     # ...
 
     # ..
-    Y = kron_dot_v1(B, A, X)
+    Y = kron_dot_v1(A, B, X)
     for i in range(comm.Get_size()):
         if rank == i:
             print('rank= ', rank)
@@ -107,7 +107,7 @@ def test_par_v2(n1, n2, p1, p2):
     # ...
 
     # ..
-    Y = kron_dot_v2(B, A, X)
+    Y = kron_dot_v2(A, B, X)
     for i in range(comm.Get_size()):
         if rank == i:
             print('rank= ', rank)
