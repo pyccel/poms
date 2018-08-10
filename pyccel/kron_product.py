@@ -10,7 +10,7 @@ from spl.linalg.stencil import StencilVectorSpace, \
 #from pyccel_functions import kron_dot_pyccel
 #from pyccel_functions import kron_solve_serial_pyccel
 #from pyccel_functions import kron_solve_par_pyccel
-import kron_solve_par_pyccel
+import kron_solve_par_pyccel, kron_solve_par_bnd_pyccel
 
 
 
@@ -107,8 +107,6 @@ def kron_solve_serial(A, B, Y):
 # ... Parallel Version
 def kron_solve_par(A, B, Y):
 
-    A = A.toarray().copy(order = 'F')
-    B = B.toarray().copy(order = 'F')
     V = Y.space
     X = StencilVector(V)
     starts  = V.starts
@@ -124,10 +122,34 @@ def kron_solve_par(A, B, Y):
     X._data = X._data.copy(order = 'F')
     Y._data = Y._data.copy(order = 'F')
 
-    kron_solve_par_pyccel.mod_kron_solve_par_pyccel(B, A, X._data, Y._data, points, pads,
+    kron_solve_par_pyccel.mod_kron_solve_par_pyccel(A, B, X._data, Y._data, points, pads,
                                                    starts, ends, subcoms, sizes[0],
                                                    disps[0],sizes[1],disps[1])
     return X
     # ...
+
+def kron_solve_par_bnd(A_bnd,la ,ua ,B_bnd, lb, ub, Y):
+
+    V = Y.space
+    X = StencilVector(V)
+    starts  = V.starts
+    ends    = V.ends
+    pads    = V.pads
+    points  = V.npts
+    disps   = V.cart.global_starts
+    sizes    = [None]*2
+    for i in range(2):
+        sizes[i] = V.cart.global_ends[i] - disps[i] + 1
+
+    subcoms = np.array([V.cart.subcomm[0].py2f(), V.cart.subcomm[1].py2f()])
+    X._data = X._data.copy(order = 'F')
+    Y._data = Y._data.copy(order = 'F')
+
+    kron_solve_par_bnd_pyccel.mod_kron_solve_par_bnd_pyccel(A_bnd, la, ua, B_bnd, lb, ub, 
+                                                            X._data, Y._data, points, pads,
+                                                            starts, ends, subcoms, sizes[0],
+                                                            disps[0],sizes[1],disps[1])
+
+    return X
 
 # ...
