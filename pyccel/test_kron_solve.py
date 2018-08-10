@@ -135,7 +135,7 @@ def test_par_banded(n1, n2, p1, p2):
     B_bnd = np.zeros( (1+ub+lb, cmat.shape[1]),order='F' )
     for i,j in zip( *cmat.nonzero() ):
         B_bnd[ub+i-j,j] = cmat[i,j]
-    print(2*la+ua+1)
+    #print(2*la+ua+1)
     wt = MPI.Wtime()
     X  = kron_solve_par_bnd(A_bnd,la ,ua ,B_bnd, lb, ub, Y)
     wt = MPI.Wtime() - wt
@@ -151,8 +151,8 @@ if __name__ == '__main__':
     # ... numbers of elements and degres
 
 
-    n1 = 14 ; n2 = 14
-    p1 = 9 ; p2 = 9
+    n1 = 50 ; n2 = 10
+    p1 = 3 ; p2 = 3
 
     # ... serial test
     #test_ser(n1, n2, p1, p2)

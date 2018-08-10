@@ -10,7 +10,7 @@ from spl.linalg.stencil import StencilVectorSpace, \
 #from pyccel_functions import kron_dot_pyccel
 #from pyccel_functions import kron_solve_serial_pyccel
 #from pyccel_functions import kron_solve_par_pyccel
-import kron_solve_par_pyccel, kron_solve_par_bnd_pyccel
+import kron_solve_par_pyccel,kron_solve_par_bnd_pyccel
 
 
 
