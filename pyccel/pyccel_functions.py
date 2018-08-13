@@ -108,7 +108,7 @@ def kron_solve_par_pyccel(A, B, X, Y, points, pads, starts, ends, subcoms, size_
 
     return X
 
-kron_solve_par_pyccel = epyccel(kron_solve_par_pyccel, header, libs = ['lapack'],compiler = 'mpif90')
+kron_solve_par_pyccel = epyccel(kron_solve_par_pyccel, header, libs = ['lapack'],mpi = True)
 
 header ='#$ header function kron_solve_par_bnd_pyccel(double[:,:](order=F), int, int, double[:,:](order=F), int, int, double[:,:](order=F), double[:,:](order=F), int[:], int[:], int[:], int[:], int[:], int[:], int[:], int[:], int[:])'
 def kron_solve_par_bnd_pyccel(A_bnd, la, ua, B_bnd, lb, ub, X, Y, points, pads, starts, ends, subcoms, size_0, disp_0, size_1, disp_1):
@@ -166,6 +166,6 @@ def kron_solve_par_bnd_pyccel(A_bnd, la, ua, B_bnd, lb, ub, X, Y, points, pads, 
 
     return X
 
-kron_solve_par_bnd_pyccel = epyccel(kron_solve_par_bnd_pyccel, header, libs = ['lapack'],compiler = 'mpif90')
+kron_solve_par_bnd_pyccel = epyccel(kron_solve_par_bnd_pyccel, header, libs = ['lapack'],mpi = True)
 
 

@@ -124,18 +124,19 @@ def test_par_banded(n1, n2, p1, p2):
     la = abs( dmat.offsets.min() )
     ua = dmat.offsets.max()
     cmat = dmat.tocsr()
-    A_bnd = np.zeros( (1+ua+la, cmat.shape[1]),order='F' )
+    A_bnd = np.zeros( (cmat.shape[1],1+ua+la),order='F' )
     for i,j in zip( *cmat.nonzero() ):
-        A_bnd[ua+i-j,j] = cmat[i,j]
+        A_bnd[i,la+j-i] = cmat[i,j]
 
     dmat = dia_matrix( B )
     lb = abs( dmat.offsets.min() )
     ub = dmat.offsets.max()
     cmat = dmat.tocsr()
-    B_bnd = np.zeros( (1+ub+lb, cmat.shape[1]),order='F' )
+    B_bnd = np.zeros( (cmat.shape[1],1+ub+lb),order='F' )
     for i,j in zip( *cmat.nonzero() ):
-        B_bnd[ub+i-j,j] = cmat[i,j]
-    #print(2*la+ua+1)
+        B_bnd[i,lb+j-i] = cmat[i,j]
+
+    
     wt = MPI.Wtime()
     X  = kron_solve_par_bnd(A_bnd,la ,ua ,B_bnd, lb, ub, Y)
     wt = MPI.Wtime() - wt
@@ -151,8 +152,8 @@ if __name__ == '__main__':
     # ... numbers of elements and degres
 
 
-    n1 = 50 ; n2 = 10
-    p1 = 3 ; p2 = 3
+    n1 = 16	 ; n2 = 16
+    p1 = 5 ; p2 = 5
 
     # ... serial test
     #test_ser(n1, n2, p1, p2)
