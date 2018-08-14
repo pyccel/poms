@@ -6,8 +6,8 @@ from spl.ddm.cart       import Cart
 from spl.linalg.stencil import StencilVectorSpace, \
                                StencilVector, StencilMatrix
 
-# ... Compute Y = (B kron A) X (1st parallel version)
-def kron_dot_v1(B, A, X):
+# ... Compute Y = (A kron B) X (1st parallel version)
+def kron_dot_v1(A, B, X):
     # ...
     V = X.space
 
@@ -52,8 +52,8 @@ def kron_dot_v1(B, A, X):
     return Y
 # ...
 
-# ... Compute Y = (B kron A) X (2nd parallel version)
-def kron_dot_v2(B, A, X):
+# ... Compute Y = (A kron B) X (2nd parallel version)
+def kron_dot_v2(A, B, X):
     # ...
     V = X.space
     comm = MPI.COMM_WORLD
@@ -89,8 +89,8 @@ def kron_dot_v2(B, A, X):
     return Y
 # ...
 
-# ... Compute X, solution of (B kron A)X = Y (Serial Version)
-def kron_solve_serial(B, A, Y):
+# ... Compute X, solution of (A kron B)X = Y (Serial Version)
+def kron_solve_serial(A, B, Y):
     from scipy.linalg.lapack import dgetrf, dgetrs
 
     V = Y.space
@@ -117,8 +117,8 @@ def kron_solve_serial(B, A, Y):
     return X
 # ...
 
-# ... Compute X, solution of (B kron A)X = Y (Parallel Version)
-def kron_solve_par(B, A, Y):
+# ... Compute X, solution of (A kron B)X = Y (Parallel Version)
+def kron_solve_par(A, B, Y):
     from scipy.linalg.lapack import dgetrf, dgetrs
 
     # ...
