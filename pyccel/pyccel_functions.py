@@ -149,21 +149,22 @@ def kron_solve_par_bnd_pyccel_2d(A_bnd, la, ua, B_bnd, lb, ub, X, Y, points, pad
 
     X_glob      = zeros(n1)
     Y_glob      = zeros(n2)
-    X_loc       = zeros(n1)
-    Y_loc       = zeros(n2)
+    X_loc       = zeros(e1-s1+1)
+    Y_loc       = zeros(e2-s2+1)
     
 
-    for i2 in range(n2):
-        X_loc[:] = Y[p1:n1+p1,i2+p2]
+    for i2 in range(e2-s2+1):
+       
+        X_loc[:] = Y[p1:e1-s1+1+p1,i2+p2]
         subcomm_1.Allgatherv(X_loc, [X_glob, size_0, disp_0, MPI.DOUBLE])
         X_glob, A_sinfo = dgbtrs(A_bnd, la, ua, X_glob, A_piv)
-        X[p1:n1+p1,p2+i2] = X_glob[:]
+        X[p1:e1-s1+1+p1,p2+i2] = X_glob[s1:e1+1]
 
-    for i1 in range(n1):  
-        Y_loc[:] =  X[i1+p1,p2:n2+p2]
+    for i1 in range(e1-s1+1):  
+        Y_loc[:] =  X[i1+p1,p2:e2-s2+1+p2]
         subcomm_2.Allgatherv(Y_loc, [Y_glob, size_1, disp_1, MPI.DOUBLE])
         Y_glob, B_sinfo = dgbtrs(B_bnd, lb, ub, Y_glob, B_piv)
-        X[p1+i1,p2:n2+p2] = Y_glob[:]
+        X[p1+i1,p2:e2-s2+1+p2] = Y_glob[s2:e2+1]
 
     return X
 
@@ -183,7 +184,7 @@ def kron_solve_par_bnd_pyccel_3d(A_bnd, la, ua, B_bnd, lb, ub, C_bnd, lc, uc ,X,
     
     subcomm_1 = subcoms[0]
     subcomm_2 = subcoms[1]
-    subcomm_2 = subcoms[2]
+    subcomm_3 = subcoms[2]
 
     s1 = starts[0]
     s2 = starts[1]
@@ -218,30 +219,30 @@ def kron_solve_par_bnd_pyccel_3d(A_bnd, la, ua, B_bnd, lb, ub, C_bnd, lc, uc ,X,
     X_glob      = zeros(n1)
     Y_glob      = zeros(n2)
     Z_glob      = zeros(n3)
-    X_loc       = zeros(n1)
-    Y_loc       = zeros(n2)
-    Z_loc       = zeros(n3)
+    X_loc       = zeros(e1-s1+1)
+    Y_loc       = zeros(e2-s2+1)
+    Z_loc       = zeros(e3-s3+1)
     
-    for i3 in range(n3):
-        for i2 in range(n2):
-            X_loc[:] = Y[p1:n1+p1,i2+p2, i3+p3]
+    for i3 in range(e3-s3+1):
+        for i2 in range(e2-s2+1):
+            X_loc[:] = Y[p1:e1-s1+1+p1,i2+p2, i3+p3]
             subcomm_1.Allgatherv(X_loc, [X_glob, size_0, disp_0, MPI.DOUBLE])
             X_glob, A_sinfo = dgbtrs(A_bnd, la, ua, X_glob, A_piv)
-            X[p1:n1+p1, p2+i2, p3+i3] = X_glob[:]
+            X[p1:e1-s1+1+p1, p2+i2, p3+i3] = X_glob[s1:e1+1]
 
-    for i3 in range(n3):
-        for i1 in range(n1):  
-            Y_loc[:] =  X[i1+p1, p2:n2+p2, i3+p3]
+    for i3 in range(e3-s3+1):
+        for i1 in range(e1-s1+1):  
+            Y_loc[:] =  X[i1+p1, p2:e2-s2+1+p2, i3+p3]
             subcomm_2.Allgatherv(Y_loc, [Y_glob, size_1, disp_1, MPI.DOUBLE])
             Y_glob, B_sinfo = dgbtrs(B_bnd, lb, ub, Y_glob, B_piv)
-            X[p1+i1, p2:n2+p2, p3+i3] = Y_glob[:]
+            X[p1+i1, p2:e2-s2+1+p2, p3+i3] = Y_glob[s2:e2+1]
 
-    for i2 in range(n2):
-        for i1 in range(n1):  
-            Z_loc[:] =  X[i1+p1, i2+p2, p3:p3+n3]
-            subcomm_2.Allgatherv(Z_loc, [Z_glob, size_2, disp_2, MPI.DOUBLE])
+    for i2 in range(e2-s2+1):
+        for i1 in range(e1-s1+1):  
+            Z_loc[:] =  X[i1+p1, i2+p2, p3:p3+e3-s3+1]
+            subcomm_3.Allgatherv(Z_loc, [Z_glob, size_2, disp_2, MPI.DOUBLE])
             Z_glob, C_sinfo = dgbtrs(C_bnd, lc, uc, Z_glob, C_piv)
-            X[p1+i1, p2+i2, p3:p3+n3] = Z_glob[:]
+            X[p1+i1, p2+i2, p3:p3+e3-s3+1] = Z_glob[s3:e3+1]
 
 
 
