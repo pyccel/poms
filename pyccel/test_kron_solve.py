@@ -133,7 +133,7 @@ def test_par_banded_2d(n1, n2, p1, p2 ,P1=False, P2=False):
 
     [s1, s2] = V.starts
     [e1, e2] = V.ends
-
+    
     V1 = StencilVectorSpace([n1], [p1], [P1])
     V2 = StencilVectorSpace([n2], [p2], [P2])
 
@@ -177,10 +177,20 @@ def test_par_banded_2d(n1, n2, p1, p2 ,P1=False, P2=False):
     kron_solve_par_bnd_2d(A1_bnd,la1 ,ua1 ,A2_bnd, la2, ua2, Y, X)
     wt = MPI.Wtime() - wt
     
+    #import time 
+    
+    #for i in range(comm.Get_size()):
+    #    if rank == i:
+    #        print('rank= ', rank)
+    #        print('X_glob  = \n', X_glob)
+    #        print('X  = \n', X.toarray().reshape(n1,n2))
+    #        print('', flush=True)
+    #        time.sleep(0.1)
+    #    comm.Barrier()
     assert np.allclose( X[s1:e1+1, s2:e2+1], X_glob[s1:e1+1, s2:e2+1])
         
-    print('rank: ', rank, '- elapsed time: {}'.format(wt))
-
+    
+    
     # ...
 
 def test_kron_solver_3d_par( n1, n2, n3, p1, p2, p3, P1=False, P2=False, P3=False ):
@@ -261,9 +271,16 @@ def test_kron_solver_3d_par( n1, n2, n3, p1, p2, p3, P1=False, P2=False, P3=Fals
     kron_solve_par_bnd_3d(A1_bnd, la1 , ua1 , A2_bnd, la2, ua2, A3_bnd, la3, ua3, Y, X)
     wt = MPI.Wtime() - wt
         
-    print('rank: ', rank, '- elapsed time: {}'.format(wt))
-
-    # ... Check data
+    #import time 
+    
+    #for i in range(comm.Get_size()):
+    #    if rank == i:
+    #        print('rank= ', rank, 'time=',wt)
+    #        print('X_glob  = \n', X_glob)
+    #        print('X  = \n', X.toarray().reshape(n1,n2,n3))
+    #        print('', flush=True)
+    #        time.sleep(0.1)
+    #    comm.Barrier()
     assert np.allclose( X[s1:e1+1, s2:e2+1, s3:e3+1], X_glob[s1:e1+1, s2:e2+1, s3:e3+1] )
 #
 
@@ -273,7 +290,7 @@ if __name__ == '__main__':
     # ... numbers of elements and degres
 
 
-    n1 = 4	 ; n2 = 4 ; n3 = 4
+    n1 = 10	 ; n2 = 10 ; n3 = 10	
     p1 = 1   ; p2 = 1 ; p3 = 1
 
     # ... serial test

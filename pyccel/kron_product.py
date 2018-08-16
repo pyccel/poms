@@ -133,7 +133,7 @@ def kron_solve_par(A, B, Y):
     # ...
 
 def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X):
-
+    X.update_ghost_regions()
     V = Y.space
     starts  = V.starts
     ends    = V.ends
@@ -144,7 +144,7 @@ def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X):
     
     sizes[0] = V.cart.global_ends[0] - disps[0] + 1
     sizes[1] = V.cart.global_ends[1] - disps[1] + 1
-
+   
     #subcoms = np.array([V.cart.subcomm[0], V.cart.subcomm[1]])
     subcoms = np.array([V.cart.subcomm[0].py2f(), V.cart.subcomm[1].py2f()])
    
@@ -156,7 +156,7 @@ def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X):
                                                                   X._data, Y._data, points, pads,
                                                                   starts, ends, subcoms, sizes[0],
                                                                   disps[0],sizes[1],disps[1])
-
+    #X.update_ghost_regions()
     return X
 
 def kron_solve_par_bnd_3d(A_bnd,la ,ua ,B_bnd, lb, ub, C_bnd, lc, uc, Y, X):
@@ -184,7 +184,7 @@ def kron_solve_par_bnd_3d(A_bnd,la ,ua ,B_bnd, lb, ub, C_bnd, lc, uc, Y, X):
                                                                    X._data, Y._data, points, pads, starts, ends, 
                                                                   subcoms, sizes[0], disps[0],sizes[1],disps[1], 
                                                                    sizes[2], disps[2])
-
+    #X.update_ghost_regions()
     return X
 
 
