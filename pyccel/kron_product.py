@@ -9,8 +9,8 @@ from spl.linalg.stencil import StencilVectorSpace, \
 
 #from pyccel_functions import kron_dot_pyccel_2d
 #from pyccel_functions import kron_solve_serial_pyccel_2d
-from pyccel_functions import kron_solve_par_pyccel_2d
-#from pyccel_functions import kron_solve_par_bnd_pyccel_2d
+#from pyccel_functions import kron_solve_par_pyccel_2d
+from pyccel_functions import kron_solve_par_bnd_pyccel_2d as kron_solve_par_bnd_pyccel_2d_python
 #from pyccel_functions import kron_solve_par_bnd_pyccel_3d
 #import kron_solve_par_pyccel_2d
 import kron_solve_par_bnd_pyccel_2d
@@ -126,13 +126,13 @@ def kron_solve_par(A, B, Y):
     X._data = X._data.copy(order = 'F')
     Y._data = Y._data.copy(order = 'F')
 
-    kron_solve_par_pyccel_2d.mod_kron_solve_par_pyccel_2d(A, B, X._data, Y._data, points, pads,
-                                                   starts, ends, subcoms, sizes[0],
-                                                   disps[0],sizes[1],disps[1])
+   # kron_solve_par_pyccel_2d.mod_kron_solve_par_pyccel_2d(A, B, X._data, Y._data, points, pads,
+   #                                                starts, ends, subcoms, sizes[0],
+   #                                                disps[0],sizes[1],disps[1])
     return X
     # ...
 
-def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X):
+def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X, with_pycc=False):
     X.update_ghost_regions()
     V = Y.space
     starts  = V.starts
@@ -144,19 +144,23 @@ def kron_solve_par_bnd_2d(A_bnd,la ,ua ,B_bnd, lb, ub, Y, X):
     
     sizes[0] = V.cart.global_ends[0] - disps[0] + 1
     sizes[1] = V.cart.global_ends[1] - disps[1] + 1
-   
-    #subcoms = np.array([V.cart.subcomm[0], V.cart.subcomm[1]])
-    subcoms = np.array([V.cart.subcomm[0].py2f(), V.cart.subcomm[1].py2f()])
-   
-    #kron_solve_par_bnd_pyccel_2d(A_bnd, la, ua, B_bnd, lb, ub, 
-    #                              X._data, Y._data, points, pads,
-    #                              starts, ends, subcoms, sizes[0],
-    #                              disps[0],sizes[1],disps[1])
-    kron_solve_par_bnd_pyccel_2d.mod_kron_solve_par_bnd_pyccel_2d(A_bnd, la, ua, B_bnd, lb, ub, 
+    
+	# ...
+    if with_pycc:
+        subcoms = np.array([V.cart.subcomm[0].py2f(), V.cart.subcomm[1].py2f()])
+        kron_solve_par_bnd_pyccel_2d.mod_kron_solve_par_bnd_pyccel_2d(A_bnd, la, ua, B_bnd, lb, ub, 
                                                                   X._data, Y._data, points, pads,
                                                                   starts, ends, subcoms, sizes[0],
                                                                   disps[0],sizes[1],disps[1])
-    #X.update_ghost_regions()
+    else:
+        subcoms = np.array([V.cart.subcomm[0], V.cart.subcomm[1]])
+        kron_solve_par_bnd_pyccel_2d_python(A_bnd, la, ua, B_bnd, lb, ub, 
+                                  X._data, Y._data, points, pads,
+                                starts, ends, subcoms, sizes[0],
+                                  disps[0],sizes[1],disps[1])
+	# ...
+    
+	#X.update_ghost_regions()
     return X
 
 def kron_solve_par_bnd_3d(A_bnd,la ,ua ,B_bnd, lb, ub, C_bnd, lc, uc, Y, X):

@@ -1,4 +1,4 @@
-from pyccel import epyccel
+#from pyccel import epyccel
 
 header = '#$ header function  kron_dot_pyccel_2d(int[:], int[:], int[:], double[:,:], double[:,:], double[:,:], double[:,:], double[:,:])'
 def kron_dot_pyccel_2d(starts, ends, pads, X, X_tmp, Y, A, B):
@@ -104,8 +104,7 @@ def kron_solve_par_pyccel_2d(A, B, X, Y, points, pads, starts, ends, subcoms, si
         subcomm_2.Allgatherv(Ytmp_loc, [Ytmp_glob_2, size_1, disp_1])
         X_glob_2[i1,:] = Ytmp_glob_2[:]
         X_glob_2[i1,:], B_sinfo = dgetrs(B, B_piv, X_glob_2[i1,:])
-
-        X[p1+i1,p2:n2+p2] = X_glob_2[:, s2:e2+1]
+        X[p1+i1,p2:n2+p2] = X_glob_2[s2:e2+1]
 
     return X
 

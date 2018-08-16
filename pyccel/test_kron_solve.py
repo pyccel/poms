@@ -174,20 +174,20 @@ def test_par_banded_2d(n1, n2, p1, p2 ,P1=False, P2=False):
     Y._data = Y._data.copy(order = 'F')
 
     wt = MPI.Wtime()
-    kron_solve_par_bnd_2d(A1_bnd,la1 ,ua1 ,A2_bnd, la2, ua2, Y, X)
+    kron_solve_par_bnd_2d(A1_bnd,la1 ,ua1 ,A2_bnd, la2, ua2, Y, X, False)
     wt = MPI.Wtime() - wt
-    
+    print('rank= ', rank, ' time', wt)
     #import time 
     
     #for i in range(comm.Get_size()):
     #    if rank == i:
-    #        print('rank= ', rank)
+    #        print('rank= ', rank, ' time', wt)
     #        print('X_glob  = \n', X_glob)
     #        print('X  = \n', X.toarray().reshape(n1,n2))
     #        print('', flush=True)
     #        time.sleep(0.1)
     #    comm.Barrier()
-    assert np.allclose( X[s1:e1+1, s2:e2+1], X_glob[s1:e1+1, s2:e2+1])
+    #assert np.allclose( X[s1:e1+1, s2:e2+1], X_glob[s1:e1+1, s2:e2+1])
         
     
     
@@ -297,6 +297,6 @@ if __name__ == '__main__':
     #test_ser(n1, n2, p1, p2)
     #test_par(n1, n2, p1, p2)
     test_par_banded_2d(n1, n2, p1, p2)
-    test_kron_solver_3d_par(n1, n2, n3, p1, p2, p3)
+    #test_kron_solver_3d_par(n1, n2, n3, p1, p2, p3)
 
 
