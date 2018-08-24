@@ -170,3 +170,71 @@ def kron_solve_par(A, B, Y):
     return X
     # ...
 # ...
+
+# ... convert a 1D stencil matrix to band matrix
+def to_bnd(A):
+
+    dmat = dia_matrix(A.toarray())
+    la    = abs(dmat.offsets.min())
+    ua    = dmat.offsets.max()
+    cmat = dmat.tocsr()
+
+    A_bnd = np.zeros((1+ua+2*la, cmat.shape[1]))
+
+    for i,j in zip(*cmat.nonzero()):
+        A_bnd[la+ua+i-j, j] = cmat[i,j]
+
+    return A_bnd, la, ua
+# ...
+
+# ...
+def kron_solve_bnd_par(A, B, Y):
+    from scipy.linalg.lapack import dgbtrs
+
+    # ...
+    A_bnd = A[0]; la= A[1]; ua = A[2]; A_piv = A[3]
+    B_bnd = B[0]; lb= B[1]; ub = B[2]; B_piv = B[3]
+    # ...
+
+    # ...
+    V = Y.space
+    X = StencilVector(V)
+
+    s1, s2 = V.starts
+    e1, e2 = V.ends
+    n1, n2 = V.npts
+
+    subcomm_1 = V.cart.subcomm[0]
+    subcomm_2 = V.cart.subcomm[1]
+    # ...
+
+    # ...
+    Y_glob_1 = np.zeros((n1))
+
+    Ytmp_glob_1 = np.zeros((n1, e2-s2+1))
+    Ytmp_glob_2 = np.zeros((n2))
+
+    X_glob_2 = np.zeros((e1-s1+1, n2))
+    # ...
+
+    lwt = MPI.Wtime()
+    # ...
+    for i2 in range(e2-s2+1):
+        Y_loc = Y[s1:e1+1, s2+i2].copy()
+        subcomm_1.Allgatherv(Y_loc, Y_glob_1)
+
+        Ytmp_glob_1[:,i2], A_sinfo = dgbtrs(A_bnd, la, ua, Y_glob_1, A_piv)
+
+    for i1 in range(e1-s1+1):
+        Ytmp_loc = Ytmp_glob_1[s1+i1, 0:e2+1-s2].copy()
+        subcomm_2.Allgatherv(Ytmp_loc, Ytmp_glob_2)
+
+        X_glob_2[i1,:], B_sinfo = dgbtrs(B_bnd, lb, ub, Ytmp_glob_2, B_piv)
+    # ...
+
+    # ...
+    X[s1:e1+1,s2:e2+1] = X_glob_2[:, s2:e2+1]
+    lwt = MPI.Wtime()  - lwt
+    return X, lwt
+    # ...
+# ...
