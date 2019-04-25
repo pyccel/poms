@@ -1,82 +1,124 @@
 # -*- coding: UTF-8 -*-
 from numpy              import zeros, linspace
-from spl.linalg.stencil import StencilMatrix
-from spl.fem.splines    import SplineSpace
-from spl.fem.tensor     import TensorFemSpace
+from psydac.linalg.stencil import StencilMatrix,StencilVector
+from psydac.fem.splines    import SplineSpace
+from psydac.fem.tensor     import TensorFemSpace
 from mpi4py             import MPI
 
 
-# ...
+def kernel( p, k, bs, w, mat1, mat2):
+
+    mat1[:,:] = 0.
+    mat2[:,:] = 0.
+
+    for i in range(p+1):
+        for j in range(p+1):
+
+            bi_1 = bs[i, 1, :]
+            bj_1 = bs[j, 1, :]
+            bi   = bs[i, 0, :]
+            bj   = bs[j, 0, :]
+            wvol = w[:]
+
+
+            v_m  = bi * bj * wvol
+            v_s  = bi_1*bj_1*wvol
+
+            mat1[i, p+j-i] = v_m.sum()
+            mat2[i, p+j-i] = v_s.sum()
+
 def assembly_1d(V):
 
-    # ... sizes
+    [p1] = V.degree
+    
+    [s1] = V.vector_space.starts
+    [e1] = V.vector_space.ends
+   
+    # Quadrature data
+    ne        = V.quad_grids[0].num_elements
+    k1        = V.quad_grids[0].num_quad_pts
+    spans_1   = V.quad_grids[0].spans
+    basis_1   = V.quad_grids[0].basis
+    weights_1 = V.quad_grids[0].weights
+
+    mass = StencilMatrix( V.vector_space, V.vector_space )
+    stif = StencilMatrix( V.vector_space, V.vector_space )
+
+    # Create element matrices
+    mat_m1 = zeros((p1+1,2*p1+1))
+    mat_s1 = zeros((p1+1,2*p1+1))
+
+    
+    # Build global matrices: cycle over elements
+
+    for ie1 in range(ne):
+
+        # Get spline index, B-splines' values and quadrature weights
+        is1 = spans_1[ie1]
+        bs1 = basis_1[ie1,:,:,:]
+        w   = weights_1[ie1,:]
+
+        kernel(p1, k1, bs1, w, mat_m1, mat_s1)
+        mass[is1-p1:is1+1,:] += mat_m1[:,:]
+        stif[is1-p1:is1+1,:] += mat_s1[:,:]
+
+        
+    mass.remove_spurious_entries()
+    stif.remove_spurious_entries()
+    
+    return stif, mass
+
+def assemble_rhs( V, f ):
+    """
+    Assemble right-hand-side vector.
+
+    Parameters
+    ----------
+    V : SplineSpace
+        Finite element space where the Galerkin method is applied.
+
+    f : callable
+        Right-hand side function (charge density).
+
+    Returns
+    -------
+    rhs : StencilVector
+        Vector b of coefficients, in linear system Ax=b.
+
+    """
+    # Sizes
     [s1] = V.vector_space.starts
     [e1] = V.vector_space.ends
     [p1] = V.vector_space.pads
 
-    k1 = V.quad_order
-    spans_1 = V.spans
-    basis_1 = V.basis
-    weights_1 = V.weights
-    # ...
+    # Quadrature data
+    nk1       = V.quad_grids[0].num_elements
+    nq1       = V.quad_grids[0].num_quad_pts
+    spans_1   = V.quad_grids[0].spans
+    basis_1   = V.quad_grids[0].basis
+    points_1  = V.quad_grids[0].points
+    weights_1 = V.quad_grids[0].weights
 
-    # ... data structure
-    mass      = StencilMatrix( V.vector_space, V.vector_space )
-    stiffness = StencilMatrix( V.vector_space, V.vector_space )
-    # ...
+    # Data structure
+    rhs = StencilVector( V.vector_space )
 
-    # ... build matrices
-    current_rank = V.vector_space.cart._rank
-    last_rank    = V.vector_space.cart._size-1
+    # Build RHS
+    for k1 in range( nk1 ):
 
+        is1    =   spans_1[k1]
+        bs1    =   basis_1[k1,:,:,:]
+        x1     =  points_1[k1, :]
+        wvol   = weights_1[k1, :]
+        f_quad = f( x1 )
 
-    if current_rank == last_rank == 0:
-        se = s1
-        ee = e1 - p1
-    elif current_rank == 0:
-        se = s1
-        ee = e1
-    elif current_rank == last_rank:
-        se = s1 - p1
-        ee = e1 - p1
-    else:
-        se = s1 - p1
-        ee = e1
+        for il1 in range( p1+1 ):
 
-    for ie1 in range(se, ee+1) :
-        is1 = spans_1[ie1]
-        k  = is1 - p1 - 1
-        ks = max(0, s1-k)
-        ke = min(p1, e1-k)
+            bi_0 = bs1[il1, 0, :]
+            v    = bi_0 * f_quad * wvol
 
-        for il_1 in range(ks, ke+1):
-            i1 = is1 - p1  - 1 + il_1
+            rhs[is1-p1+il1] += v.sum()
 
-            for jl_1 in range(0, p1+1):
-                j1   = is1 - p1  - 1 + jl_1
-                v_m = 0.0
-                v_s = 0.0
-
-                for g1 in range(0, k1):
-                    bi_0 = basis_1[il_1, 0, g1, ie1]
-                    bi_x = basis_1[il_1, 1, g1, ie1]
-
-                    bj_0 = basis_1[jl_1, 0, g1, ie1]
-                    bj_x = basis_1[jl_1, 1, g1, ie1]
-
-                    wvol = weights_1[g1, ie1]
-
-                    v_m += bi_0 * bj_0 * wvol
-                    v_s += (bi_x * bj_x) * wvol
-
-                mass[i1, j1 - i1] += v_m
-                stiffness[i1, j1 - i1]  += v_s
-
-    # ...
-
-    return mass
-
-# ...
+    return rhs
 
 
 # ... Assembly of the stifness matrix

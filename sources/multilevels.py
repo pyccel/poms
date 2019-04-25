@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import numpy as np
 from scipy.sparse import coo_matrix
-from spl.linalg.stencil import StencilVectorSpace, StencilMatrix
+from psydac.linalg.stencil import StencilVectorSpace, StencilMatrix
 
 # ...
 def knots_to_insert(Tf, nf, pf, Tc, nc, pc):
